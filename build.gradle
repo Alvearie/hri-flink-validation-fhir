@@ -1,0 +1,85 @@
+/*
+ * (C) Copyright IBM Corp. 2021
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+allprojects {
+    apply plugin: 'scala'
+    group = 'org.alvearie.hri.flink'
+    version = '2.1-1.0.1'
+
+    ext {
+        pipelineCoreVersion = '2.1-1.0.1'
+        javaVersion = '1.8'
+        flinkVersion = '1.10.0'
+        scalaBinaryVersion = '2.12'
+        scalaVersion = '2.12.11'
+        scalaTestVersion = '3.1.1'
+        jacksonVersion = '2.12.0'
+        slf4jVersion = '1.7.7'
+        log4jVersion = '1.2.17'
+    }
+
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
+    repositories {
+      //TODO: replace with GH Packages Maven repo location
+        ['wh-wffh-maven-local'].each { repo ->
+            maven {
+                credentials {
+                    username = findProperty('user') ?: System.getenv('user')
+                    password = findProperty('password') ?: System.getenv('password')
+                }
+
+                url "NEW_GH_PACKAGES_URL"
+            }
+        }
+        mavenCentral()
+        mavenLocal()
+    }
+
+    ext {
+        branch = System.getenv('BRANCH_NAME') != null
+                ? System.getenv('BRANCH_NAME')
+                : getWorkingBranch()
+    }
+
+    // If not running in travis add 'local' to the version to support local development
+    if (System.getenv('BRANCH_NAME') == null || System.getenv('BRANCH_NAME') == "") {
+        version = "${branch}-local-SNAPSHOT"
+    } else if (System.getenv('GIT_TAG') == null || System.getenv('GIT_TAG') == "") {
+        version = "${branch}-SNAPSHOT"
+    } else if (System.getenv('GIT_TAG') == "v${version}") {
+        version = "${version}"
+    } else {
+        throw new InvalidUserDataException(String.format("The tag '%s' does not match with the current release version '%s'",System.getenv('TRAVIS_TAG'),"${version}"));
+    }
+}
+
+dependencies {
+    // Scala lib
+    implementation "org.scala-lang:scala-library:${scalaVersion}"
+}
+
+// prevents parent project from producing build output
+jar.enabled = false
+
+/**
+ * Get the name of the working branch of the project
+ *
+ * @return Name of the working branch
+ */
+def getWorkingBranch() {
+    // Triple double-quotes for the breaklines
+    def workingBranch = """git --git-dir=${rootDir}/.git
+                               --work-tree=${rootDir}
+                               rev-parse --abbrev-ref HEAD""".execute().text.trim()
+    println "Working branch: " + workingBranch
+    return workingBranch
+}
+

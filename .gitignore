@@ -1,0 +1,19 @@
+# Ignore IntelliJ files
+.idea
+.iml
+.ruby-version
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+
+.DS_Store
+test/test.iml
+test/demo/testenv.sh
+test/dependencies/
+test/test_data/synthea/
+test/test_data/synthetic_mass/
+
+hri-flink-validation-fhir.iml

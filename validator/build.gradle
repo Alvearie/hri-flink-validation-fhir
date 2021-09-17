@@ -1,0 +1,67 @@
+/*
+ * (C) Copyright IBM Corp. 2021
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+plugins {
+    // Apply the scala plugin to add support for Scala
+    id 'maven-publish'
+    id "com.github.maiflai.scalatest" version "0.25"
+    id "org.scoverage" version "4.0.1"
+}
+
+description = """HRI Flink validator library for FHIR schema validation"""
+
+dependencies {
+    // Scala lib
+    implementation "org.scala-lang:scala-library:${scalaVersion}"
+
+    implementation "org.alvearie.hri.flink:hri-flink-pipeline-core:${pipelineCoreVersion}"
+    implementation "commons-io:commons-io:2.4" // not sure why this isn't getting picked up from hri-flink-pipeline-core
+    implementation "org.apache.flink:flink-connector-kafka_${scalaBinaryVersion}:${flinkVersion}" // not sure why this isn't getting picked up from hri-flink-pipeline-core
+    implementation "com.ibm.fhir:fhir-model:4.7.1"
+
+    //Test dependencies here:
+    testImplementation "org.scalactic:scalactic_${scalaBinaryVersion}:${scalaTestVersion}"
+    testImplementation "org.scalatest:scalatest_${scalaBinaryVersion}:${scalaTestVersion}"
+
+    testRuntimeOnly  "log4j:log4j:${log4jVersion}"
+    testRuntimeOnly  "org.slf4j:slf4j-log4j12:${slf4jVersion}"
+
+    testRuntimeOnly "com.vladsch.flexmark:flexmark-all:0.35.10"
+    testRuntimeOnly  'org.pegdown:pegdown:1.4.2'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'hri-flink-validator-fhir'
+            from components.java
+        }
+    }
+
+    repositories {
+        //TODO: replace with Github packages maven location & credentials
+        maven {
+            url 'SOME_GH_ACTIONS_URL'
+            credentials {
+                username findProperty('user') ?: ''
+                password findProperty('password') ?: ''
+            }
+        }
+    }
+}
+
+scoverage {
+    scoverageScalaVersion = scalaBinaryVersion
+    coverageOutputXML = true
+    coverageOutputHTML = true
+}
+reportScoverage.doLast {
+    println "Scoverage report:\n  file:///$buildDir/reports/scoverage/index.html"
+}
+
+reportScoverage.mustRunAfter test
+build.dependsOn reportScoverage
+

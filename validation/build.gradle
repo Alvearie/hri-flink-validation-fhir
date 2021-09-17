@@ -1,0 +1,133 @@
+/*
+ * (C) Copyright IBM Corp. 2021
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+plugins {
+    id 'application'
+    id 'maven-publish'
+    // shadow plugin to produce fat JARs
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id "com.github.maiflai.scalatest" version "0.25"
+    id "org.scoverage" version "4.0.1"
+}
+
+// artifact properties
+mainClassName = 'org.alvearie.hri.flink.FhirValidationJob'
+description = """HRI Flink FHIR schema Validation Job"""
+
+applicationDefaultJvmArgs = ["-Dlog4j.configuration=log4j.properties"]
+
+// NOTE: We cannot use "compileOnly" or "shadow" configurations since then we could not run code
+// in the IDE or with "gradle run". We also cannot exclude transitive dependencies from the
+// shadowJar yet (see https://github.com/johnrengelman/shadow/issues/159).
+// -> Explicitly define the // libraries we want to be included in the "flinkShadowJar" configuration!
+configurations {
+    flinkShadowJar // dependencies which go into the shadowJar
+
+    // always exclude these (also from transitive dependencies) since they are provided by Flink
+    flinkShadowJar.exclude group: 'org.apache.flink', module: 'force-shading'
+    flinkShadowJar.exclude group: 'com.google.code.findbugs', module: 'jsr305'
+    flinkShadowJar.exclude group: 'org.slf4j'
+    flinkShadowJar.exclude group: 'log4j'
+}
+
+// declare the dependencies for your production and test code
+dependencies {
+    // Scala lib
+    implementation "org.scala-lang:scala-library:${scalaVersion}"
+
+    implementation "org.apache.flink:flink-scala_${scalaBinaryVersion}:${flinkVersion}"
+    implementation "org.apache.flink:flink-streaming-scala_${scalaBinaryVersion}:${flinkVersion}"
+    implementation "log4j:log4j:${log4jVersion}"
+    implementation "org.slf4j:slf4j-log4j12:${slf4jVersion}"
+
+    // --------------------------------------------------------------
+    // Dependencies that should be part of the shadow jar, e.g.
+    // connectors. These must be in the flinkShadowJar configuration!
+    // --------------------------------------------------------------
+    flinkShadowJar "org.alvearie.hri.flink:hri-flink-pipeline-core:${pipelineCoreVersion}"
+    flinkShadowJar project(':validator') 
+    flinkShadowJar "info.picocli:picocli:4.2.0"
+
+    // Add test dependencies here.
+    testImplementation "org.scalactic:scalactic_${scalaBinaryVersion}:${scalaTestVersion}"
+    testImplementation "org.scalatest:scalatest_${scalaBinaryVersion}:${scalaTestVersion}"
+    testImplementation "org.scalamock:scalamock_${scalaBinaryVersion}:4.4.0"
+    testImplementation "com.github.stefanbirkner:system-rules:1.19.0"
+    testImplementation "org.apache.flink:flink-test-utils_${scalaBinaryVersion}:${flinkVersion}"
+    testImplementation "org.apache.flink:flink-tests:${flinkVersion}:tests"
+    testImplementation "org.alvearie.hri.flink:hri-flink-pipeline-core:${pipelineCoreVersion}:tests"
+
+    testRuntimeOnly "com.vladsch.flexmark:flexmark-all:0.35.10"
+}
+
+// make compileOnly dependencies available for tests:
+sourceSets {
+    main.compileClasspath += configurations.flinkShadowJar
+    main.runtimeClasspath += configurations.flinkShadowJar
+
+    test.compileClasspath += configurations.flinkShadowJar
+    test.runtimeClasspath += configurations.flinkShadowJar
+
+    scoverage.compileClasspath += configurations.flinkShadowJar
+    scoverage.runtimeClasspath += configurations.flinkShadowJar
+
+    javadoc.classpath += configurations.flinkShadowJar
+}
+
+run.classpath = sourceSets.main.runtimeClasspath
+
+jar {
+    manifest {
+        attributes 'Built-By': System.getProperty('user.name'),
+                'Build-Jdk': System.getProperty('java.version')
+        archiveBaseName = 'hri-flink-validation-fhir'
+    }
+}
+
+shadowJar {
+    configurations = [project.configurations.flinkShadowJar]
+    archiveBaseName = 'hri-flink-validation-fhir'
+    archiveClassifier.set('')
+}
+
+publishing {
+    publications {
+        shadow(MavenPublication) { publication ->
+            project.shadow.component(publication)
+            artifactId = 'hri-flink-validation-fhir'
+        }
+    }
+
+    repositories {
+         //TODO: replace with Github packages maven location & credentials
+        maven {
+            url 'SOME_GH_ACTIONS_URL'
+            credentials {
+                username findProperty('user') ?: ''
+                password findProperty('assword') ?: ''
+            }
+        }
+    }
+}
+
+// this is for App Scan
+task copyDependencies(type: Copy) {
+   from configurations.flinkShadowJar 
+   into 'dependencies'
+}
+
+scoverage {
+    scoverageScalaVersion = scalaBinaryVersion
+    coverageOutputXML = true
+    coverageOutputHTML = true
+}
+reportScoverage.doLast {
+    println "Scoverage report:\n  file:///$buildDir/reports/scoverage/index.html"
+}
+
+reportScoverage.mustRunAfter test
+build.dependsOn reportScoverage
+
