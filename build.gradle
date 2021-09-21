@@ -3,14 +3,14 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
- 
+
 allprojects {
     apply plugin: 'scala'
     group = 'org.alvearie.hri.flink'
-    version = '3.0-1.0.2'
+    version = 'Alpha.Dev'
 
     ext {
-        pipelineCoreVersion = '3.0-1.0.2'
+        pipelineCoreVersion = 'develop-SNAPSHOT'
         javaVersion = '1.8'
         flinkVersion = '1.10.0'
         scalaBinaryVersion = '2.12'
@@ -27,8 +27,8 @@ allprojects {
         options.encoding = 'UTF-8'
     }
 
-    repositories {
         //TODO: replace with GH Packages Maven repo location
+    repositories {
         ['wh-wffh-maven-local'].each { repo ->
             maven {
                 credentials {
@@ -44,18 +44,17 @@ allprojects {
     }
 
     ext {
-        branch = System.getenv('TRAVIS_BRANCH') != null
-                ? System.getenv('TRAVIS_BRANCH')
+        branch = System.getenv('BRANCH_NAME') != null
+                ? System.getenv('BRANCH_NAME')
                 : getWorkingBranch()
     }
 
-    //TODO: replace with Github Actions created Env Variable
     // If not running in travis add 'local' to the version to support local development
-    if (System.getenv('TRAVIS_BRANCH') == null || System.getenv('TRAVIS_BRANCH') == "") {
+    if (System.getenv('BRANCH_NAME') == null || System.getenv('BRANCH_NAME') == "") {
         version = "${branch}-local-SNAPSHOT"
-    } else if (System.getenv('TRAVIS_TAG') == null || System.getenv('TRAVIS_TAG') == "") {
+    } else if (System.getenv('GIT_TAG') == null || System.getenv('GIT_TAG') == "") {
         version = "${branch}-SNAPSHOT"
-    } else if (System.getenv('TRAVIS_TAG') == "v${version}") {
+    } else if (System.getenv('GIT_TAG') == "v${version}") {
         version = "${version}"
     } else {
         throw new InvalidUserDataException(String.format("The tag '%s' does not match with the current release version '%s'",System.getenv('TRAVIS_TAG'),"${version}"));

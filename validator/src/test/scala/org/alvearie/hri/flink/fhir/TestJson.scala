@@ -6,10 +6,10 @@
 
 package org.alvearie.hri.flink.fhir
 
-import org.alvearie.hri.flink.core.serialization.HriRecord
-
 import java.nio.charset.StandardCharsets
 import java.util
+
+import org.alvearie.hri.flink.core.serialization.HriRecord
 
 object TestJson {
   val DefaultTopic = "ingest.porcupine.data-int1.in"

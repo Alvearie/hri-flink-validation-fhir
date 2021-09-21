@@ -102,12 +102,12 @@ publishing {
     }
 
     repositories {
-         //TODO: replace with Github packages maven location & credentials
+      //TODO: replace with Github packages maven location & credentials
         maven {
             url 'SOME_GH_ACTIONS_URL'
             credentials {
                 username findProperty('user') ?: ''
-                password findProperty('assword') ?: ''
+                password findProperty('password') ?: ''
             }
         }
     }

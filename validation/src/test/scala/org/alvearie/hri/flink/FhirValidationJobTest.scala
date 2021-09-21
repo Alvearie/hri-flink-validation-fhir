@@ -3,15 +3,15 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
+ 
 package org.alvearie.hri.flink
+
+import java.io.{ByteArrayOutputStream, PrintStream}
 
 import org.scalatest.BeforeAndAfter
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
 import picocli.CommandLine
-
-import java.io.{ByteArrayOutputStream, PrintStream}
 
 class FhirValidationJobTest extends AnyFunSuite with BeforeAndAfter {
 

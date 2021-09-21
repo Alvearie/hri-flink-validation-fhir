@@ -6,7 +6,7 @@ require_relative '../env'
 
 class FlinkJob
 
-  TRAVIS_BRANCH = ENV['TRAVIS_BRANCH']
+  BRANCH_NAME = ENV['BRANCH_NAME']
   @@total_jobs = 0
   @@total_batches = 0
 
@@ -35,10 +35,10 @@ class FlinkJob
     if monitor_kafka
       # Create unique kafka topic names for this job
       timestamp = Time.now.to_i
-      @kafka_input_topic = kafka_topics[:input_topic].gsub('.in', "-#{TRAVIS_BRANCH}-job#{@job_number}-#{timestamp}.in")
-      @kafka_output_topic = kafka_topics[:output_topic].gsub('.out', "-#{TRAVIS_BRANCH}-job#{@job_number}-#{timestamp}.out")
-      @kafka_notification_topic = kafka_topics[:notification_topic].gsub('.notification', "-#{TRAVIS_BRANCH}-job#{@job_number}-#{timestamp}.notification")
-      @kafka_invalid_topic = kafka_topics[:invalid_topic].gsub('.invalid', "-#{TRAVIS_BRANCH}-job#{@job_number}-#{timestamp}.invalid")
+      @kafka_input_topic = kafka_topics[:input_topic].gsub('.in', "-#{BRANCH_NAME}-job#{@job_number}-#{timestamp}.in")
+      @kafka_output_topic = kafka_topics[:output_topic].gsub('.out', "-#{BRANCH_NAME}-job#{@job_number}-#{timestamp}.out")
+      @kafka_notification_topic = kafka_topics[:notification_topic].gsub('.notification', "-#{BRANCH_NAME}-job#{@job_number}-#{timestamp}.notification")
+      @kafka_invalid_topic = kafka_topics[:invalid_topic].gsub('.invalid', "-#{BRANCH_NAME}-job#{@job_number}-#{timestamp}.invalid")
 
       # Create kafka topics for the job
       @event_streams_helper.create_topic(@kafka_input_topic, parallelism)
@@ -48,7 +48,7 @@ class FlinkJob
       @event_streams_helper.verify_topic_creation([@kafka_input_topic, @kafka_output_topic, @kafka_notification_topic, @kafka_invalid_topic])
 
       # Create a kafka consumer to monitor the notification, invalid, and output topics
-      consumer_group = "hri-flink-validation-fhir-#{TRAVIS_BRANCH}-job#{@job_number}-#{timestamp}-consumer"
+      consumer_group = "hri-flink-validation-fhir-#{BRANCH_NAME}-job#{@job_number}-#{timestamp}-consumer"
       @kafka_consumer = @kafka_helper.consumer(group_id: consumer_group)
       @kafka_consumer.subscribe(@kafka_notification_topic)
       @kafka_consumer.subscribe(@kafka_invalid_topic)
@@ -243,7 +243,7 @@ class FlinkJob
     # Delete Job's batches
     Logger.new(STDOUT).info('Deleting Batches')
     elastic = HRITestHelpers::ElasticHelper.new({url: ENV['ELASTIC_URL'], username: ENV['ELASTIC_USER'], password: ENV['ELASTIC_PASSWORD']})
-    response = elastic.es_delete_by_query(TENANT_ID, "name:hri-flink-validation-fhir-#{ENV['TRAVIS_BRANCH']}-#{ENV['TEST_NAME']}-test-job#{@job_number}-batch*")
+    response = elastic.es_delete_by_query(TENANT_ID, "name:hri-flink-validation-fhir-#{ENV['BRANCH_NAME']}-#{ENV['TEST_NAME']}-test-job#{@job_number}-batch*")
     response.nil? ? (raise 'Elastic batch delete did not return a response') : (raise 'Failed to delete Elastic batches' unless response.code == 200)
     @batches.each_value { |batch| Logger.new(STDOUT).info("Batch #{batch.name} deleted") }
 
@@ -255,7 +255,7 @@ class FlinkJob
     @@total_batches += 1
     Logger.new(STDOUT).info("Submitting batch #{@@total_batches}")
 
-    batch_name = "hri-flink-validation-fhir-#{ENV['TRAVIS_BRANCH']}-#{ENV['TEST_NAME']}-test-job#{@job_number}-batch#{@@total_batches}"
+    batch_name = "hri-flink-validation-fhir-#{ENV['BRANCH_NAME']}-#{ENV['TEST_NAME']}-test-job#{@job_number}-batch#{@@total_batches}"
     batch_template = {
         name: batch_name,
         dataType: 'hri-flink-validation-fhir-batch',
