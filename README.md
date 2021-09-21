@@ -1,6 +1,6 @@
-# HRI Flink Validation FHIR
+  # HRI Flink Validation FHIR
 
-The Alvearie Health Record Ingestion service: a common 'Deployment Ready Component' designed to serve as a “front door” for data for cloud-based solutions. See our [documentation](https://alvearie.io/HRI) for more details.
+The Alvearie Health Record Ingestion service: a common 'Deployment Ready Component' designed to serve as a “front door” for data for cloud-based solutions. See our [documentation](https://alvearie.io/HRI/) for more details.
 
 This repo contains the code for the HRI Flink Validation FHIR Job of the HRI, which validates that the incoming (HRI Record's) message payload adheres to the [FHIR specification](https://www.hl7.org/fhir/overview.html).
 
@@ -9,11 +9,10 @@ Note: This software uses Apache Flink (https://flink.apache.org/) for streaming 
 ## Communication
 * Please [join](https://alvearie.io/contributions/requestSlackAccess/) our Slack channel for further questions: `#health-record-ingestion`
 * Please see recent contributors or [maintainers](MAINTAINERS.md)
-
 ## Getting Started
 
 ### Prerequisites
-* Java 1.8 - you can use an official [distribution](https://www.java.com/en/download/manual.jsp) or a package manager like `homebrew` for mac
+* Java 1.8 - IBM requires the use of AdoptOpenJDK java distribution which you can download from [this site](https://adoptopenjdk.net/?variant=openjdk8) or install using a package manager like `homebrew` for mac
 * Scala 2.12.11 - you can use an official [distribution](https://www.scala-lang.org/download/) or a package manager like `homebrew` for mac
 * Java/Scala IDE (Optional) - we use IntelliJ, but it requires a licensed version.
 * Ruby (Optional) - required for integration tests. See [testing](test/README.md) for more details.
@@ -27,7 +26,7 @@ This depends on the `hri-flink-pipeline-core` [GitHub repo](https://github.com/A
 ```
 hri-flink-validation-fhir % ./gradlew clean build
 
-> Task :validator:test
+> Task :validator:test 
 Discovery starting.
 Discovery completed in 186 milliseconds.
 Run starting. Expected test count is: 10
@@ -43,7 +42,7 @@ All tests passed.
 [info] Found 1 subproject scoverage data directories [hri-flink-validation-fhir/validator/build/scoverage]
 
 > Task :validator:reportScoverage
-[info] Found 1 subproject scoverage data directories [/hri-flink-validation-fhir/validator/build/scoverage]
+[info] Found 1 subproject scoverage data directories [hri-flink-validation-fhir/validator/build/scoverage]
 Scoverage report:
   hri-flink-validation-fhir/validator/build/reports/scoverage/index.html
 
@@ -78,9 +77,8 @@ Each branch uses its own topics, so different builds don't interfere with each o
 
 The Flink logs are available for trouble shooting. They can be viewed in the Flink UI or the Kubernetes logs. The logs for all jobs are combined together, so you may need to search to a specific time frame or look for specific keywords.
 
-
 ## Releases
-Releases are created by creating Git tags, which trigger a GitHub Actions build that publishes a release version in GitHub Packages, see [Overall strategy](https://SOME_NEW_URL/docs/wiki/Overall-Project-Branching,-Test,-and-Release-Strategy) for more details.
+Releases are created by creating Git tags, which trigger a Github actions build that publishes a release version in Github Packages, see [Overall strategy](SOME_NEW_URL/docs/wiki/Overall-Project-Branching,-Test,-and-Release-Strategy) for more details.
 
 ## Code Overview
 

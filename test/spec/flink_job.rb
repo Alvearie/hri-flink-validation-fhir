@@ -6,7 +6,7 @@ require_relative '../env'
 
 class FlinkJob
 
-  BRANCH_NAME = ENV['BRANCH_NAME']
+  TRAVIS_BRANCH = ENV['TRAVIS_BRANCH']
   @@total_jobs = 0
   @@total_batches = 0
 
@@ -14,27 +14,10 @@ class FlinkJob
     @flink_helper = flink_helper
     @event_streams_helper = event_streams_helper
     @kafka_helper = kafka_helper
-    @kafka_producer = kafka_helper.producer(compression_codec: :zstd)
     @validation_jar_id = validation_jar_id
     @tenant = tenant
     @@total_jobs += 1
     @job_number = @@total_jobs
-
-    # These instance variables won't be set until the job is started
-    @kafka_input_topic = nil
-    @kafka_output_topic = nil
-    @kafka_notification_topic = nil
-    @kafka_invalid_topic = nil
-    @batch_completion_delay = nil
-    @parallelism = nil
-    @job_id = nil
-    @kafka_notification_consumer = nil
-    @kafka_monitor_thread = nil
-    @flink_monitor_thread = nil
-    @batch_notification_callback = nil
-    @batch_invalid_callback = nil
-    @batch_output_callback = nil
-    @batch_input_callback = nil
 
     @job_started = false
     @batches = Concurrent::Hash.new
@@ -45,48 +28,57 @@ class FlinkJob
   attr_reader :kafka_producer
   attr_reader :kafka_input_topic
 
-  def start_job(flink_oauth_token, kafka_input_topic, kafka_output_topic, kafka_notification_topic, kafka_invalid_topic, parallelism, batch_completion_delay)
+  def start_job(flink_oauth_token, parallelism, batch_complete_delay, monitor_kafka = false, kafka_topics)
     Logger.new(STDOUT).info("Starting Job #{@job_number}")
+    @kafka_producer = @kafka_helper.producer(compression_codec: :zstd)
 
-    # Create unique kafka topic names for this job
-    @kafka_input_topic = kafka_input_topic.gsub('.in', "-#{BRANCH_NAME}-job#{@job_number}.in")
-    @kafka_output_topic = kafka_output_topic.gsub('.out', "-#{BRANCH_NAME}-job#{@job_number}.out")
-    @kafka_notification_topic = kafka_notification_topic.gsub('.notification', "-#{BRANCH_NAME}-job#{@job_number}.notification")
-    @kafka_invalid_topic = kafka_invalid_topic.gsub('.invalid', "-#{BRANCH_NAME}-job#{@job_number}.invalid")
+    if monitor_kafka
+      # Create unique kafka topic names for this job
+      timestamp = Time.now.to_i
+      @kafka_input_topic = kafka_topics[:input_topic].gsub('.in', "-#{TRAVIS_BRANCH}-job#{@job_number}-#{timestamp}.in")
+      @kafka_output_topic = kafka_topics[:output_topic].gsub('.out', "-#{TRAVIS_BRANCH}-job#{@job_number}-#{timestamp}.out")
+      @kafka_notification_topic = kafka_topics[:notification_topic].gsub('.notification', "-#{TRAVIS_BRANCH}-job#{@job_number}-#{timestamp}.notification")
+      @kafka_invalid_topic = kafka_topics[:invalid_topic].gsub('.invalid', "-#{TRAVIS_BRANCH}-job#{@job_number}-#{timestamp}.invalid")
 
-    # Create kafka topics for the job
-    @event_streams_helper.create_topic(@kafka_input_topic, parallelism)
-    @event_streams_helper.create_topic(@kafka_output_topic, parallelism)
-    @event_streams_helper.create_topic(@kafka_notification_topic, 1)
-    @event_streams_helper.create_topic(@kafka_invalid_topic, parallelism)
-    @event_streams_helper.verify_topic_creation([@kafka_input_topic, @kafka_output_topic, @kafka_notification_topic, @kafka_invalid_topic])
+      # Create kafka topics for the job
+      @event_streams_helper.create_topic(@kafka_input_topic, parallelism)
+      @event_streams_helper.create_topic(@kafka_output_topic, parallelism)
+      @event_streams_helper.create_topic(@kafka_notification_topic, 1)
+      @event_streams_helper.create_topic(@kafka_invalid_topic, parallelism)
+      @event_streams_helper.verify_topic_creation([@kafka_input_topic, @kafka_output_topic, @kafka_notification_topic, @kafka_invalid_topic])
 
-    # Create a kafka consumer to monitor the notification, invalid, and output topics
-    consumer_group = "hri-flink-validation-fhir-#{BRANCH_NAME}-job#{@job_number}-consumer"
-    @kafka_consumer = @kafka_helper.consumer(group_id: consumer_group)
-    @kafka_consumer.subscribe(@kafka_notification_topic)
-    @kafka_consumer.subscribe(@kafka_invalid_topic)
-    @kafka_consumer.subscribe(@kafka_output_topic)
-    @kafka_consumer.subscribe(@kafka_input_topic)
-    # Ensure that the consumer is set to the latest offset for each topic
-    @event_streams_helper.reset_consumer_group(@event_streams_helper.get_groups, consumer_group, @kafka_notification_topic, 'latest')
-    @event_streams_helper.reset_consumer_group(@event_streams_helper.get_groups, consumer_group, @kafka_invalid_topic, 'latest')
-    @event_streams_helper.reset_consumer_group(@event_streams_helper.get_groups, consumer_group, @kafka_output_topic, 'latest')
-    @event_streams_helper.reset_consumer_group(@event_streams_helper.get_groups, consumer_group, @kafka_input_topic, 'latest')
+      # Create a kafka consumer to monitor the notification, invalid, and output topics
+      consumer_group = "hri-flink-validation-fhir-#{TRAVIS_BRANCH}-job#{@job_number}-#{timestamp}-consumer"
+      @kafka_consumer = @kafka_helper.consumer(group_id: consumer_group)
+      @kafka_consumer.subscribe(@kafka_notification_topic)
+      @kafka_consumer.subscribe(@kafka_invalid_topic)
+      @kafka_consumer.subscribe(@kafka_output_topic)
+      @kafka_consumer.subscribe(@kafka_input_topic)
+      # Ensure that the consumer is set to the latest offset for each topic
+      @event_streams_helper.reset_consumer_group(@event_streams_helper.get_groups, consumer_group, @kafka_notification_topic, 'latest')
+      @event_streams_helper.reset_consumer_group(@event_streams_helper.get_groups, consumer_group, @kafka_invalid_topic, 'latest')
+      @event_streams_helper.reset_consumer_group(@event_streams_helper.get_groups, consumer_group, @kafka_output_topic, 'latest')
+      @event_streams_helper.reset_consumer_group(@event_streams_helper.get_groups, consumer_group, @kafka_input_topic, 'latest')
+
+      # Every flink job will have two threads dedicated to monitoring kafka and the flink job (through the flink API).
+      # The "Thread.current" settings prevent exceptions from being raised, or printed to the console, until the monitor
+      # threads are joined to the main thread.
+      @kafka_monitor_thread = Thread.new {
+        Thread.current.abort_on_exception = false
+        Thread.current.report_on_exception = false
+        kafka_monitor_job
+      }
+    else
+      @kafka_input_topic = kafka_topics[:input_topic]
+    end
 
     # Start the flink job and verify that it is running
-    @job_id = @flink_helper.start_flink_job(@validation_jar_id, @kafka_input_topic, batch_completion_delay, flink_oauth_token, parallelism)
+    @job_id = @flink_helper.start_flink_job(@validation_jar_id, ENV['KAFKA_BROKERS'], ENV['SASL_PLAIN_PASSWORD'], @kafka_input_topic, ENV['HRI_SERVICE_URL'], ENV['OIDC_HRI_INTERNAL_CLIENT_ID'], ENV['OIDC_HRI_INTERNAL_CLIENT_SECRET'], "#{ENV['APPID_URL']}/oauth/v4/#{ENV['APPID_TENANT']}", ENV['APPID_HRI_AUDIENCE'], batch_complete_delay, flink_oauth_token)
     @flink_helper.verify_job_state(@job_id, flink_oauth_token, 'RUNNING')
     @job_started = true
 
-    # Every flink job will have two threads dedicated to monitoring kafka and the flink job (through the flink API).
-    # The "Thread.current" settings prevent exceptions from being raised, or printed to the console, until the monitor
-    # threads are joined to the main thread.
-    @kafka_monitor_thread = Thread.new {
-      Thread.current.abort_on_exception = false
-      Thread.current.report_on_exception = false
-      kafka_monitor_job
-    }
+    # wait for the job to completely start up, otherwise it will miss some of the initial messages.
+    sleep(5)
 
     @flink_monitor_thread = Thread.new {
       Thread.current.abort_on_exception = false
@@ -179,12 +171,12 @@ class FlinkJob
       response = @flink_helper.stop_job(@job_id, {'Authorization' => "Bearer #{flink_oauth_token}"})
       raise "Failed to stop Flink job with ID: #{@job_id}" unless response.code == 202
       begin
-        @flink_helper.verify_job_state(@job_id, flink_oauth_token, 'CANCELED')
-        Logger.new(STDOUT).info("Cancelled Flink job #{@job_id}")
+        @flink_helper.verify_job_state(@job_id, flink_oauth_token, 'FINISHED')
+        Logger.new(STDOUT).info("Stopped Flink job #{@job_id}")
         @job_started = false
       rescue
         (Timeout::Error)
-        Logger.new(STDOUT).warn('Timeout cancelling flink job')
+        Logger.new(STDOUT).warn('Timeout stopping flink job')
       end
     end
   end
@@ -202,15 +194,19 @@ class FlinkJob
     Logger.new(STDOUT).info("Stopping Job #{@job_number}")
     stop_flink_job(flink_oauth_token)
 
+    @kafka_producer.shutdown if @kafka_producer
+
     # Exit the kafka thread if it is still running, or join the thread to propagate its errors
-    if @kafka_monitor_thread.alive?
-      @kafka_monitor_thread.exit
-    else
-      begin
-        @kafka_monitor_thread.join
-      rescue Kafka::ProcessingError => e
-        Logger.new(STDOUT).error("Job#{@job_number} (#{@job_id}) encountered an error while monitoring kafka topics:\n#{e.cause.message}")
-        exception_occurred = true
+    if @kafka_monitor_thread
+      if @kafka_monitor_thread.alive?
+        @kafka_monitor_thread.exit
+      else
+        begin
+          @kafka_monitor_thread.join
+        rescue Kafka::ProcessingError => e
+          Logger.new(STDOUT).error("Job#{@job_number} (#{@job_id}) encountered an error while monitoring kafka topics:\n#{e.cause.message}")
+          exception_occurred = true
+        end
       end
     end
 
@@ -236,8 +232,6 @@ class FlinkJob
     # If flink job wasn't previously canceled, cancel it now
     stop_flink_job(flink_oauth_token)
 
-    @kafka_producer.shutdown
-
     # Delete Kafka resources
     Logger.new(STDOUT).info("Deleting Kafka Topics")
     @kafka_consumer.stop if @kafka_consumer
@@ -248,8 +242,8 @@ class FlinkJob
 
     # Delete Job's batches
     Logger.new(STDOUT).info('Deleting Batches')
-    elastic = ElasticHelper.new
-    response = elastic.es_delete_by_query(TENANT_ID, "name:hri-flink-validation-fhir-#{ENV['BRANCH_NAME']}-#{ENV['TEST_NAME']}-test-job#{@job_number}-batch*")
+    elastic = HRITestHelpers::ElasticHelper.new({url: ENV['ELASTIC_URL'], username: ENV['ELASTIC_USER'], password: ENV['ELASTIC_PASSWORD']})
+    response = elastic.es_delete_by_query(TENANT_ID, "name:hri-flink-validation-fhir-#{ENV['TRAVIS_BRANCH']}-#{ENV['TEST_NAME']}-test-job#{@job_number}-batch*")
     response.nil? ? (raise 'Elastic batch delete did not return a response') : (raise 'Failed to delete Elastic batches' unless response.code == 200)
     @batches.each_value { |batch| Logger.new(STDOUT).info("Batch #{batch.name} deleted") }
 
@@ -261,7 +255,7 @@ class FlinkJob
     @@total_batches += 1
     Logger.new(STDOUT).info("Submitting batch #{@@total_batches}")
 
-    batch_name = "hri-flink-validation-fhir-#{ENV['BRANCH_NAME']}-#{ENV['TEST_NAME']}-test-job#{@job_number}-batch#{@@total_batches}"
+    batch_name = "hri-flink-validation-fhir-#{ENV['TRAVIS_BRANCH']}-#{ENV['TEST_NAME']}-test-job#{@job_number}-batch#{@@total_batches}"
     batch_template = {
         name: batch_name,
         dataType: 'hri-flink-validation-fhir-batch',

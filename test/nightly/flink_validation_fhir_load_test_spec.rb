@@ -4,7 +4,7 @@
 
 require_relative '../env'
 
-describe 'Flink FHIR Validation Load Test Jobs' do
+describe 'Flink FHIR Validation Load Test' do
   before(:all) do
     TENANT_ID = 'test'
     TEST_TIMEOUT = 450
@@ -14,19 +14,21 @@ describe 'Flink FHIR Validation Load Test Jobs' do
     BATCH_COMPLETION_DELAY = 30000
     ENV['TEST_NAME'] = 'load' unless ENV['TEST_NAME']
 
-    @flink_helper = FlinkHelper.new(ENV['FLINK_URL'])
-    @event_streams_helper = EventStreamsHelper.new
-    @flink_api_oauth_token = AppIDHelper.new.get_access_token(Base64.encode64("#{ENV['OIDC_HRI_DATA_INTEGRATOR_CLIENT_ID']}:#{ENV['OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET']}").delete("\n"), '', ENV['APPID_FLINK_AUDIENCE'])
-    @hri_oauth_token = AppIDHelper.new.get_access_token(Base64.encode64("#{ENV['OIDC_HRI_DATA_INTEGRATOR_CLIENT_ID']}:#{ENV['OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET']}").delete("\n"), 'tenant_test hri_data_integrator', ENV['APPID_HRI_AUDIENCE'])
-    @kafka = Kafka.new(ENV['KAFKA_BROKERS'], client_id: "hri-flink-validation-fhir-#{@travis_branch}", connect_timeout: 10, socket_timeout: 10, sasl_plain_username: 'token', sasl_plain_password: ENV['SASL_PLAIN_PASSWORD'], ssl_ca_certs_from_system: true)
-    @hri_helper = HRIHelper.new(ENV['HRI_URL'])
-    @validation_jar_id = @flink_helper.upload_jar_from_dir('hri-flink-validation-fhir-nightly-test-jar.jar', '../dependencies', @flink_api_oauth_token)
+    @flink_helper = HRITestHelpers::FlinkHelper.new(ENV['FLINK_URL'])
+    @event_streams_helper = HRITestHelpers::EventStreamsHelper.new
+    @iam_token = HRITestHelpers::IAMHelper.new(ENV['IAM_CLOUD_URL']).get_access_token(ENV['CLOUD_API_KEY'])
+    @appid_helper = HRITestHelpers::AppIDHelper.new(ENV['APPID_URL'], ENV['APPID_TENANT'], @iam_token, ENV['JWT_AUDIENCE_ID'])
+    @flink_api_oauth_token = @appid_helper.get_access_token('hri_integration_tenant_test_data_integrator', '', ENV['APPID_FLINK_AUDIENCE'])
+    @hri_oauth_token = @appid_helper.get_access_token('hri_integration_tenant_test_data_integrator', 'tenant_test hri_data_integrator', ENV['APPID_HRI_AUDIENCE'])
+    @kafka = Kafka.new(ENV['KAFKA_BROKERS'], client_id: "hri-flink-validation-fhir-#{@travis_branch}-#{Time.now.to_i}", connect_timeout: 10, socket_timeout: 10, sasl_plain_username: 'token', sasl_plain_password: ENV['SASL_PLAIN_PASSWORD'], ssl_ca_certs_from_system: true)
+    @mgmt_api_helper = HRITestHelpers::MgmtAPIHelper.new(ENV['HRI_INGRESS_URL'], @iam_token)
+    @validation_jar_id = @flink_helper.upload_jar_from_dir('hri-flink-validation-fhir-nightly-test-jar.jar', File.join(File.dirname(__FILE__), '../dependencies'), @flink_api_oauth_token, /hri-flink-validation-fhir-.+.jar/)
 
     @flink_job = FlinkJob.new(@flink_helper, @event_streams_helper, @kafka, @validation_jar_id, TENANT_ID)
-    @flink_job.start_job(@flink_api_oauth_token, ENV['INPUT_TOPIC'], ENV['OUTPUT_TOPIC'], ENV['NOTIFICATION_TOPIC'], ENV['INVALID_TOPIC'], PARALLELISM, BATCH_COMPLETION_DELAY)
+    @flink_job.start_job(@flink_api_oauth_token, PARALLELISM, BATCH_COMPLETION_DELAY, true, {input_topic: ENV['INPUT_TOPIC'], output_topic: ENV['OUTPUT_TOPIC'], notification_topic: ENV['NOTIFICATION_TOPIC'], invalid_topic: ENV['INVALID_TOPIC']})
 
     @background_flink_job = FlinkJob.new(@flink_helper, @event_streams_helper, @kafka, @validation_jar_id, TENANT_ID)
-    @background_flink_job.start_job(@flink_api_oauth_token, ENV['INPUT_TOPIC'], ENV['OUTPUT_TOPIC'], ENV['NOTIFICATION_TOPIC'], ENV['INVALID_TOPIC'], PARALLELISM, BATCH_COMPLETION_DELAY)
+    @background_flink_job.start_job(@flink_api_oauth_token, PARALLELISM, BATCH_COMPLETION_DELAY, true, {input_topic: ENV['INPUT_TOPIC'], output_topic: ENV['OUTPUT_TOPIC'], notification_topic: ENV['NOTIFICATION_TOPIC'], invalid_topic: ENV['INVALID_TOPIC']})
 
     @input_dir = File.join(File.dirname(__FILE__), "../test_data/synthea/fhir")
     @input_records = Dir.children(@input_dir)
@@ -35,12 +37,12 @@ describe 'Flink FHIR Validation Load Test Jobs' do
   it "should process records under load" do
     begin
       # Submit a batch. This batch will load a set amount of records and will be used for a throughput calculation
-      main_batch = @flink_job.submit_batch(@hri_helper, @hri_oauth_token)
+      main_batch = @flink_job.submit_batch(@mgmt_api_helper, @hri_oauth_token)
       main_batch_submitted = Time.now
 
       # Submit two more batches. These batches will continuously upload records, simulating high traffic through flink
-      background_batch_1 = @flink_job.submit_batch(@hri_helper, @hri_oauth_token)
-      background_batch_2 = @background_flink_job.submit_batch(@hri_helper, @hri_oauth_token)
+      background_batch_1 = @flink_job.submit_batch(@mgmt_api_helper, @hri_oauth_token)
+      background_batch_2 = @background_flink_job.submit_batch(@mgmt_api_helper, @hri_oauth_token)
 
       # Callback for when a notification is received by a job's kafka consumer
       batch_notification_callback = lambda { |batch, notification|
@@ -145,7 +147,7 @@ describe 'Flink FHIR Validation Load Test Jobs' do
 
         if main_batch.records_sent.value == INPUT_RECORD_NUMBER && !main_batch_send_completed
           # After a certain number of records are loaded, complete the batch
-          main_batch.complete(@hri_helper, @hri_oauth_token)
+          main_batch.complete(@mgmt_api_helper, @hri_oauth_token)
           main_batch_send_completed = true
           Logger.new(STDOUT).info("#{main_batch.name} sent all #{INPUT_RECORD_NUMBER} records")
         end

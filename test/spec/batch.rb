@@ -42,7 +42,7 @@ class Batch
     expected_record_count_hash = {
         expectedRecordCount: @records_sent.value
     }
-    response = hri_helper.hri_put_batch(TENANT_ID, @id, 'sendCompleted', expected_record_count_hash, {'Authorization' => "Bearer #{hri_oauth_token}"})
+    response = hri_helper.hri_put_batch(TENANT_ID, @id, 'sendComplete', expected_record_count_hash, {'Authorization' => "Bearer #{hri_oauth_token}"})
     raise "Failed to update the status of batch #{@name} to sendCompleted" unless response.code == 200
   end
 

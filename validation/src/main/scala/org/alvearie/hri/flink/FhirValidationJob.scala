@@ -3,11 +3,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
+ 
 package org.alvearie.hri.flink
-
-import java.io.{PrintStream, PrintWriter}
-import java.util.concurrent.Callable
 
 import org.alvearie.hri.api.{BatchLookup, InvalidRecord}
 import org.alvearie.hri.flink.core.BaseValidationJob
@@ -18,6 +15,9 @@ import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunctio
 import org.slf4j.LoggerFactory
 import picocli.CommandLine
 import picocli.CommandLine.ArgGroup
+
+import java.io.{PrintStream, PrintWriter}
+import java.util.concurrent.Callable
 
 @CommandLine.Command(
   name = "ValidateFhir",
@@ -106,7 +106,7 @@ class StandaloneOrMgmtParams {
 }
 
 class MgmtParams {
-  @CommandLine.Option(names = Array("-m", "--mgmt-url"), description = Array("Base Url for the HRI Management API, e.g. https://68d40cd8.us-south.apigw.appdomain.cloud/hri"), required = true)
+  @CommandLine.Option(names = Array("-m", "--mgmt-url"), description = Array("Base Url for the HRI Management API"), required = true)
   var mgmtUrl: String = _
 
   @CommandLine.Option(names = Array("-c", "--client-id"), description = Array("Client ID for getting OAuth access tokens"), required = true)

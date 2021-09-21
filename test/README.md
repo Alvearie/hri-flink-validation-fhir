@@ -1,6 +1,6 @@
 # Ruby Installation for Integration Verification Tests (IVT)
 
-1. (Mac OS Env) Install homebrew: https://brew.sh/
+1. (Mac OS Env) Install homebrew: https://brew.sh/   
 
 2. Install GNU Privacy Guard
     ```bash
@@ -43,14 +43,15 @@
 
 8. (Optional) To run tests locally, export these environment variables. Most of the values can be found in `.github/workflows/ci-workflow.yml`, with exceptions noted below.:
     - Export these environment variables:
-      * KAFKA_BROKERS
-      * ELASTIC_URL
-      * ELASTIC_USER
+      * KAFKA_BROKERS 
+      * ELASTIC_URL 
+      * ELASTIC_USER 
       * ELASTIC_PASSWORD - password for your ElasticSearch instance service credential
       * CLOUD_API_KEY - found in your password manager
       * SASL_PLAIN_PASSWORD - password for your Event Streams instance service credential
-      * FLINK_URL
-      * OIDC_ISSUER
+      * FLINK_URL 
+      * APPID_TENANT 
+      * APPID_URL 
       * OIDC_HRI_INTERNAL_CLIENT_ID
       * OIDC_HRI_INTERNAL_CLIENT_SECRET - secret field for your HRI internal application in AppId
       * OIDC_HRI_DATA_INTEGRATOR_CLIENT_ID
@@ -61,7 +62,8 @@
       * OUTPUT_TOPIC
       * NOTIFICATION_TOPIC
       * INVALID_TOPIC
-      * HRI_URL
+      * HRI_INGRESS_URL
+      * HRI_SERVICE_URL
       * LOGDNA_URL
       * LOGDNA_INGESTION_KEY - Cloud LogDNA Ingestion Key
       * BRANCH_NAME - your git branch name
@@ -72,8 +74,6 @@
             curl -sL https://ibm.biz/idt-installer | bash
             bx login --apikey {CLOUD_API_KEY}
             bx target -g {RESOURCE_GROUP}
-            bx plugin install cloud-functions
-            bx fn property set --namespace flink-integration
             bx plugin install event-streams
             bx es init
         ```
@@ -97,6 +97,15 @@
          ./gradlew build publishToMavenLocal
          ./gradlew copyNightlyTestDependencies -PcloudApiKey=$CLOUD_API_KEY
       ```
+
+     The last step before running the tests is to install the `hri-test-helpers` gem locally. Run the following commands:
+      ```bash
+         gem install specific_install
+         gem specific_install -l git@github.com/Alvearie/hri-test-helpers.git -b master
+      ```
+     Then, add the following line to Gemfile, but *do not commit this change to Github*:
+     ```gem 'hri-test-helpers```
+     
       Then run the tests with:
      
      ```rspec test/nightly/flink_validation_high_availability_spec.rb --tag ~@broken```

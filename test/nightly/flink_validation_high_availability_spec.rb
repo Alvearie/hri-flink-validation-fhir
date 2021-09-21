@@ -11,42 +11,44 @@ require_relative '../env'
 # Anytime the hri-flink-validation-fhir jar is recompiled, the steps above need to be executed for these tests to pick up the
 # new version
 
-describe 'HRI Flink Validation FHIR High Availability Job' do
+describe 'Flink Validation FHIR High Availability Job' do
 
   before(:all) do
     TENANT_ID = 'test'
     BATCH_COMPLETION_DELAY = 5000
     @travis_branch = ENV['TRAVIS_BRANCH']
-    @flink_helper = FlinkHelper.new(ENV['FLINK_URL'])
-    @event_streams_helper = EventStreamsHelper.new
-    @flink_api_oauth_token = AppIDHelper.new.get_access_token(Base64.encode64("#{ENV['OIDC_HRI_DATA_INTEGRATOR_CLIENT_ID']}:#{ENV['OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET']}").delete("\n"), '', ENV['APPID_FLINK_AUDIENCE'])
-    @hri_oauth_token = AppIDHelper.new.get_access_token(Base64.encode64("#{ENV['OIDC_HRI_DATA_INTEGRATOR_CLIENT_ID']}:#{ENV['OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET']}").delete("\n"), 'tenant_test hri_data_integrator', ENV['APPID_HRI_AUDIENCE'])
-    @hri_helper = HRIHelper.new(ENV['HRI_URL'])
-    @elastic = ElasticHelper.new
+    @flink_helper = HRITestHelpers::FlinkHelper.new(ENV['FLINK_URL'])
+    @event_streams_helper = HRITestHelpers::EventStreamsHelper.new
+    @iam_token = HRITestHelpers::IAMHelper.new(ENV['IAM_CLOUD_URL']).get_access_token(ENV['CLOUD_API_KEY'])
+    @appid_helper = HRITestHelpers::AppIDHelper.new(ENV['APPID_URL'], ENV['APPID_TENANT'], @iam_token, ENV['JWT_AUDIENCE_ID'])
+    @flink_api_oauth_token = @appid_helper.get_access_token('hri_integration_tenant_test_data_integrator', '', ENV['APPID_FLINK_AUDIENCE'])
+    @hri_oauth_token = @appid_helper.get_access_token('hri_integration_tenant_test_data_integrator', 'tenant_test hri_data_integrator', ENV['APPID_HRI_AUDIENCE'])
+    @mgmt_api_helper = HRITestHelpers::MgmtAPIHelper.new(ENV['HRI_INGRESS_URL'], @iam_token)
+    @elastic = HRITestHelpers::ElasticHelper.new({url: ENV['ELASTIC_URL'], username: ENV['ELASTIC_USER'], password: ENV['ELASTIC_PASSWORD']})
     @record_validator = KafkaRecordValidator.new
-    @helper = Helper.new
+    @request_helper = HRITestHelpers::RequestHelper.new
 
-    @input_topic = ENV['INPUT_TOPIC'].gsub('.in', "-#{@travis_branch}.in")
-    @output_topic = ENV['OUTPUT_TOPIC'].gsub('.out', "-#{@travis_branch}.out")
-    @notification_topic = ENV['NOTIFICATION_TOPIC'].gsub('.notification', "-#{@travis_branch}.notification")
-    @invalid_topic = ENV['INVALID_TOPIC'].gsub('.invalid', "-#{@travis_branch}.invalid")
+    timestamp = Time.now.to_i
+    @input_topic = ENV['INPUT_TOPIC'].gsub('.in', "-#{@travis_branch}-#{timestamp}.in")
+    @output_topic = ENV['OUTPUT_TOPIC'].gsub('.out', "-#{@travis_branch}-#{timestamp}.out")
+    @notification_topic = ENV['NOTIFICATION_TOPIC'].gsub('.notification', "-#{@travis_branch}-#{timestamp}.notification")
+    @invalid_topic = ENV['INVALID_TOPIC'].gsub('.invalid', "-#{@travis_branch}-#{timestamp}.invalid")
     @event_streams_helper.create_topic(@input_topic, 1)
     @event_streams_helper.create_topic(@output_topic, 1)
     @event_streams_helper.create_topic(@notification_topic, 1)
     @event_streams_helper.create_topic(@invalid_topic, 1)
     @event_streams_helper.verify_topic_creation([@input_topic, @output_topic, @notification_topic, @invalid_topic])
 
-    @output_consumer_group = "hri-flink-validation-fhir-#{@travis_branch}-output-consumer"
-    @notification_consumer_group = "hri-flink-validation-fhir-#{@travis_branch}-notification-consumer"
-    @invalid_consumer_group = "hri-flink-validation-fhir-#{@travis_branch}-invalid-consumer"
-    @kafka = Kafka.new(ENV['KAFKA_BROKERS'], client_id: "hri-flink-validation-fhir-#{@travis_branch}", connect_timeout: 10, socket_timeout: 10, sasl_plain_username: 'token', sasl_plain_password: ENV['SASL_PLAIN_PASSWORD'], ssl_ca_certs_from_system: true)
-    @kafka_producer = @kafka.producer(compression_codec: :zstd)
+    @output_consumer_group = "hri-flink-validation-fhir-#{@travis_branch}-#{timestamp}-output-consumer"
+    @notification_consumer_group = "hri-flink-validation-fhir-#{@travis_branch}-#{timestamp}-notification-consumer"
+    @invalid_consumer_group = "hri-flink-validation-fhir-#{@travis_branch}-#{timestamp}-invalid-consumer"
+    @kafka = Kafka.new(ENV['KAFKA_BROKERS'], client_id: "hri-flink-validation-fhir-#{@travis_branch}-#{timestamp}", connect_timeout: 10, socket_timeout: 10, sasl_plain_username: 'token', sasl_plain_password: ENV['SASL_PLAIN_PASSWORD'], ssl_ca_certs_from_system: true)
 
     #Upload Jar File
-    @test_jar_id = @flink_helper.upload_jar_from_dir('hri-flink-validation-fhir-nightly-test-jar.jar', '../dependencies', @flink_api_oauth_token)
+    @test_jar_id = @flink_helper.upload_jar_from_dir('hri-flink-validation-fhir-nightly-test-jar.jar', File.join(File.dirname(__FILE__), '../dependencies'), @flink_api_oauth_token, /hri-flink-validation-fhir-.+.jar/)
 
-    @test_job_id = @flink_helper.start_flink_job(@test_jar_id, @input_topic, BATCH_COMPLETION_DELAY, @flink_api_oauth_token)
-    @flink_helper.verify_job_state(@test_job_id, @flink_api_oauth_token, 'RUNNING')
+    @flink_job = FlinkJob.new(@flink_helper, @event_streams_helper, @kafka, @test_jar_id, TENANT_ID)
+    @flink_job.start_job(@flink_api_oauth_token, 1, BATCH_COMPLETION_DELAY, false, {input_topic: @input_topic})
   end
 
   before(:each) do
@@ -75,15 +77,14 @@ describe 'HRI Flink Validation FHIR High Availability Job' do
 
   after(:all) do
     begin
-      if @test_job_id
-        #Stop Job
-        response = @flink_helper.stop_job(@test_job_id, {'Authorization' => "Bearer #{@flink_api_oauth_token}"})
-        raise "Failed to stop Flink job with ID: #{@test_job_id}" unless response.code == 202
-        @flink_helper.verify_job_state(@test_job_id, @flink_api_oauth_token, 'FINISHED')
+      begin
+        @flink_job.cleanup_job(@flink_api_oauth_token)
+      rescue Exception => e
+        Logger.new(STDOUT).error(e)
       end
 
       if @test_jar_id
-        #Delete Jar
+        Logger.new(STDOUT).info('Deleting Validation Jar')
         response = @flink_helper.delete_jar(@test_jar_id, {'Authorization' => "Bearer #{@flink_api_oauth_token}"})
         raise "Failed to delete Flink jar with ID: #{@test_jar_id}" unless response.code == 200
         @flink_helper.verify_jar_deleted(@test_jar_id, @flink_api_oauth_token)
@@ -92,8 +93,6 @@ describe 'HRI Flink Validation FHIR High Availability Job' do
       response = @elastic.es_delete_by_query(TENANT_ID, "name:hri-flink-validation-fhir-#{ENV['TRAVIS_BRANCH']}*")
       response.nil? ? (raise 'Elastic batch delete did not return a response') : (raise 'Failed to delete Elastic batches' unless response.code == 200)
       Logger.new(STDOUT).info("Delete test batches by query response #{response.body}")
-
-      @kafka_producer.shutdown
     ensure
       @event_streams_helper.delete_topic(@input_topic)
       @event_streams_helper.delete_topic(@output_topic)
@@ -111,16 +110,16 @@ describe 'HRI Flink Validation FHIR High Availability Job' do
           dataType: 'hri-flink-validation-fhir-batch',
           topic: @input_topic
       }
-      @batch_id = @hri_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)
+      @batch_id = @mgmt_api_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)
 
       key = 1
       File.readlines(File.join(File.dirname(__FILE__), "../test_data/valid_records.txt")).each do |line|
-        @kafka_producer.produce(line, key: "#{key}", topic: @input_topic, headers: {batchId: @batch_id})
-        @kafka_producer.deliver_messages
+        @flink_job.kafka_producer.produce(line, key: "#{key}", topic: @input_topic, headers: {batchId: @batch_id})
+        @flink_job.kafka_producer.deliver_messages
         if key == 10
-          taskmanager_pod = @helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}").split("\n").select { |s| s.include?('taskmanager') }[0].split(' ')[0]
-          @helper.exec_command("kubectl delete pod #{taskmanager_pod} -n #{ENV['NAMESPACE']}")
-          raise "Kubernetes pod #{taskmanager_pod} not deleted" unless @helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}").split("\n").select { |s| s.include?(taskmanager_pod) }.empty?
+          taskmanager_pod = @request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout].split("\n").select { |s| s.include?('taskmanager') }[0].split(' ')[0]
+          @request_helper.exec_command("kubectl delete pod #{taskmanager_pod} -n #{ENV['NAMESPACE']}")
+          raise "Kubernetes pod #{taskmanager_pod} not deleted" unless @request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout].split("\n").select { |s| s.include?(taskmanager_pod) }.empty?
           Logger.new(STDOUT).info("Deleted taskmanager pod #{taskmanager_pod}")
         end
         key += 1
@@ -129,7 +128,7 @@ describe 'HRI Flink Validation FHIR High Availability Job' do
 
       @record_validator.all_output_records(@kafka_output_consumer, @output_topic, @batch_id, key - 1, true, 120)
 
-      response = @hri_helper.hri_put_batch(TENANT_ID, @batch_id, 'sendComplete', expected_record_count, {'Authorization' => "Bearer #{@hri_oauth_token}"})
+      response = @mgmt_api_helper.hri_put_batch(TENANT_ID, @batch_id, 'sendComplete', expected_record_count, {'Authorization' => "Bearer #{@hri_oauth_token}"})
       raise "Failed to update the status of batch ID #{@batch_id} to sendCompleted" unless response.code == 200
 
       @record_validator.all_notification_records(@kafka_notification_consumer, @notification_topic, @batch_id, %w(started sendCompleted completed))
@@ -144,15 +143,15 @@ describe 'HRI Flink Validation FHIR High Availability Job' do
         dataType: 'hri-flink-validation-fhir-batch',
         topic: @input_topic
     }
-    @batch_id = @hri_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)
+    @batch_id = @mgmt_api_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)
 
     key = 1
     File.readlines(File.join(File.dirname(__FILE__), "../test_data/valid_records.txt")).each do |line|
-      @kafka_producer.produce(line, key: "#{key}", topic: @input_topic, headers: {batchId: @batch_id})
-      @kafka_producer.deliver_messages
+      @flink_job.kafka_producer.produce(line, key: "#{key}", topic: @input_topic, headers: {batchId: @batch_id})
+      @flink_job.kafka_producer.deliver_messages
       if key == 10
-        jobmanager_pod = @helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}").split("\n").select { |s| s.include?('jobmanager') }[0].split(' ')[0]
-        @helper.exec_command("kubectl delete pod #{jobmanager_pod} -n #{ENV['NAMESPACE']}")
+        jobmanager_pod = @request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout].split("\n").select { |s| s.include?('jobmanager') }[0].split(' ')[0]
+        @request_helper.exec_command("kubectl delete pod #{jobmanager_pod} -n #{ENV['NAMESPACE']}")
         Logger.new(STDOUT).info("Deleted jobmanager pod: #{jobmanager_pod}")
       end
       key += 1
@@ -177,7 +176,7 @@ describe 'HRI Flink Validation FHIR High Availability Job' do
 
     @record_validator.all_output_records(@kafka_output_consumer, @output_topic, @batch_id, key - 1, true)
 
-    response = @hri_helper.hri_put_batch(TENANT_ID, @batch_id, 'sendComplete', expected_record_count, {'Authorization' => "Bearer #{@hri_oauth_token}"})
+    response = @mgmt_api_helper.hri_put_batch(TENANT_ID, @batch_id, 'sendComplete', expected_record_count, {'Authorization' => "Bearer #{@hri_oauth_token}"})
     raise "Failed to update the status of batch ID #{@batch_id} to sendCompleted" unless response.code == 200
 
     @record_validator.all_notification_records(@kafka_notification_consumer, @notification_topic, @batch_id, %w(started sendCompleted completed))
@@ -192,19 +191,19 @@ describe 'HRI Flink Validation FHIR High Availability Job' do
         dataType: 'hri-flink-validation-fhir-batch',
         topic: @input_topic
     }
-    @batch_id = @hri_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)
+    @batch_id = @mgmt_api_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)
 
     key = 1
     File.readlines(File.join(File.dirname(__FILE__), "../test_data/valid_records.txt")).each do |line|
-      @kafka_producer.produce(line, key: "#{key}", topic: @input_topic, headers: {batchId: @batch_id})
-      @kafka_producer.deliver_messages
+      @flink_job.kafka_producer.produce(line, key: "#{key}", topic: @input_topic, headers: {batchId: @batch_id})
+      @flink_job.kafka_producer.deliver_messages
       if key == 10
-        zookeeper_pod = `kubectl get pods -n #{ENV['NAMESPACE']}`.split("\n").select { |s| s.include?('hri-zookeeper') }[0].split(' ')[0]
+        zookeeper_pod = `kubectl get pods -n #{ENV['NAMESPACE']}`.split("\n").select { |s| s.include?('zookeeper') }[0].split(' ')[0]
         `kubectl delete pod #{zookeeper_pod} -n #{ENV['NAMESPACE']}`
         Logger.new(STDOUT).info("Deleted zookeper pod: #{zookeeper_pod}")
         Timeout.timeout(15, nil, 'Zookeeper pod not reinitializing after 15 seconds') do
           while true
-            break unless @helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}").split("\n").select { |s| s.include?(zookeeper_pod) && s.include?('Init') }.empty?
+            break unless @request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout].split("\n").select { |s| s.include?(zookeeper_pod) && s.include?('Init') }.empty?
           end
         end
       end
@@ -214,7 +213,7 @@ describe 'HRI Flink Validation FHIR High Availability Job' do
 
     @record_validator.all_output_records(@kafka_output_consumer, @output_topic, @batch_id, key - 1, true, 120)
 
-    response = @hri_helper.hri_put_batch(TENANT_ID, @batch_id, 'sendComplete', expected_record_count, {'Authorization' => "Bearer #{@hri_oauth_token}"})
+    response = @mgmt_api_helper.hri_put_batch(TENANT_ID, @batch_id, 'sendComplete', expected_record_count, {'Authorization' => "Bearer #{@hri_oauth_token}"})
     raise "Failed to update the status of batch ID #{@batch_id} to sendCompleted" unless response.code == 200
 
     @record_validator.all_notification_records(@kafka_notification_consumer, @notification_topic, @batch_id, %w(started sendCompleted completed))

@@ -6,9 +6,6 @@
 
 package org.alvearie.hri.flink.fhir
 
-import java.io.{PrintWriter, StringWriter}
-import java.nio.charset.StandardCharsets
-
 import com.ibm.fhir.model.format.Format
 import com.ibm.fhir.model.parser.FHIRParser
 import com.ibm.fhir.model.resource.Bundle
@@ -16,6 +13,8 @@ import org.alvearie.hri.flink.core.Validator
 import org.alvearie.hri.flink.core.serialization.HriRecord
 import org.apache.commons.io.IOUtils
 
+import java.io.{PrintWriter, StringWriter}
+import java.nio.charset.StandardCharsets
 import scala.runtime.RichBoolean
 import scala.util.{Failure, Success, Try}
 

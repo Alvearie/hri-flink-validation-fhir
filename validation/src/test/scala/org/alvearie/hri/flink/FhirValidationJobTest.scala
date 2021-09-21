@@ -6,12 +6,12 @@
 
 package org.alvearie.hri.flink
 
-import java.io.{ByteArrayOutputStream, PrintStream}
-
 import org.scalatest.BeforeAndAfter
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
 import picocli.CommandLine
+
+import java.io.{ByteArrayOutputStream, PrintStream}
 
 class FhirValidationJobTest extends AnyFunSuite with BeforeAndAfter {
 
@@ -134,7 +134,7 @@ class FhirValidationJobTest extends AnyFunSuite with BeforeAndAfter {
     err should include ("It must start with \"ingest.\"")
   }
 
-  test("it should throw exception for invalid inputTopic Value with the MgmtAPI") {
+  test("it should throw exception for invalid inputTopic Value with the HRI MgmtAPI") {
     val badInputTopicValue = "ingest-monkey22-noPeriodSeparators"
     val badInputTopicArg = "--input=" + badInputTopicValue
 

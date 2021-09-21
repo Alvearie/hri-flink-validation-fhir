@@ -8,7 +8,7 @@ echo 'Run Smoke Tests'
 
 FLINK_CREDENTIALS_RAW="$OIDC_HRI_DATA_INTEGRATOR_CLIENT_ID:$OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET"
 FLINK_CREDENTIALS=$(printf $FLINK_CREDENTIALS_RAW | base64 | tr -d '\n')
-FLINK_TOKEN_RESPONSE=$(curl --request POST "$OIDC_ISSUER/token" --header "Authorization: Basic $FLINK_CREDENTIALS" --header 'Content-Type: application/x-www-form-urlencoded' --data-urlencode 'grant_type=client_credentials' --data-urlencode "audience=$APPID_FLINK_AUDIENCE")
+FLINK_TOKEN_RESPONSE=$(curl --request POST "$APPID_URL/oauth/v4/$APPID_TENANT/token" --header "Authorization: Basic $FLINK_CREDENTIALS" --header 'Content-Type: application/x-www-form-urlencoded' --data-urlencode 'grant_type=client_credentials' --data-urlencode "audience=$APPID_FLINK_AUDIENCE")
 FLINK_TOKEN=$(printf $FLINK_TOKEN_RESPONSE | jq .access_token | awk 'gsub(/"/, "")')
 FLINK_OVERVIEW_STATUS=$(curl --write-out "%{http_code}\n" --silent --output /dev/null "$FLINK_URL/overview" --header "Authorization: Bearer $FLINK_TOKEN")
 
