@@ -10,6 +10,7 @@ concurrency: ci-${{ github.ref }}
 jobs:
   buildAndTest:
     name: Build, Test, and Package
+    runs-on: ubuntu-latest
 
     steps:
       - name: Set Branch Name
