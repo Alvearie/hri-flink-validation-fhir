@@ -1,0 +1,25 @@
+name: ci-workflow
+
+on:
+  push:
+    branches: [ '**' ]
+  workflow_dispatch:
+
+concurrency: ci-${{ github.ref }}
+
+jobs:
+  buildAndTest:
+    name: Build, Test, and Package
+
+    steps:
+      - name: Set Branch Name
+        uses: nelonoel/branch-name@v1.0.1
+
+      - uses: actions/checkout@v2      
+
+      - name: Set up adoptopenjdk8
+        uses: actions/setup-java@v2
+        with:
+          java-version: '9'
+          distribution: 'adopt-openj9'
+          cache: 'gradle'      
