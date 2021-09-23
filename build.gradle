@@ -30,16 +30,13 @@ allprojects {
         options.encoding = 'UTF-8'
     }
 
-        //TODO: replace with GH Packages Maven repo location
     repositories {
         maven {
             url = uri("https://maven.pkg.github.com/Alvearie/hri-flink-pipeline-core")
             credentials {
-                username = findProperty('user') ?: System.getenv('user')
-                password = findProperty('password') ?: System.getenv('password')
+                username = findProperty('USER') ?: System.getenv('USER')
+                password = findProperty('PASSWORD') ?: System.getenv('PASSWORD')
             }
-
-            url "NEW_GH_PACKAGES_URL"
         }
         mavenCentral()
         mavenLocal()
