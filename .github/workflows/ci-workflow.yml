@@ -16,6 +16,7 @@ jobs:
       - name: Set Branch Name
         uses: nelonoel/branch-name@v1.0.1
 
+      - name: Checkout Code
       - uses: actions/checkout@v2      
 
       - name: Set up adoptopenjdk8
@@ -24,3 +25,8 @@ jobs:
           java-version: '9'
           distribution: 'adopt-openj9'
           cache: 'gradle'      
+
+      - name: Gradle build
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build          
