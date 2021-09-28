@@ -31,18 +31,18 @@ jobs:
 
     - name: Gradle build
       env:
-        PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         ./gradlew clean build  
 
     - name: Gradle publish
       env:
-        PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         ./gradlew publish
 
     - name: Check OpenSource Dependencies
       env:
-        PASSWORD: ${{ secrets.SONATYPE_OSS_PASSWORD }}
+        SONATYPE_OSS_PASSWORD: ${{ secrets.SONATYPE_OSS_PASSWORD }}
       run: |
         ./gradlew ossIndexAudit

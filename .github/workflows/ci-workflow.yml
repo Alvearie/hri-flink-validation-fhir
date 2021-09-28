@@ -28,12 +28,12 @@ jobs:
 
       - name: Gradle build
         env:
-          PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew clean build          
 
       - name: Gradle publish
         env:
-          PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew publish
