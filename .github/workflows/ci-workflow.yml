@@ -30,5 +30,10 @@ jobs:
         env:
           PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          chmod +x ./gradlew
           ./gradlew clean build          
+
+      - name: Gradle publish
+        env:
+          PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./gradlew publish
