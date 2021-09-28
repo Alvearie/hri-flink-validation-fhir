@@ -45,6 +45,4 @@ jobs:
       env:
         PASSWORD: ${{ secrets.SONATYPE_OSS_PASSWORD }}
       run: |
-        ./gradlew ossIndexAudit        
-
-
+        ./gradlew ossIndexAudit
