@@ -32,17 +32,9 @@ jobs:
         run: |
           ./gradlew clean build publishToMavenLocal      
 
-      # - name: Gradle publish
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     # HRIBLD_USER: ${{ secrets.HRIBLD_USER }}
-      #     # HRIBLD_TOKEN: ${{ secrets.HRIBLD_TOKEN }}
-      #   run: |
-      #     ./gradlew publish
-
-      - name: Check OpenSource Dependencies
+      - name: Gradle publish
         env:
-          SONATYPE_OSS_PASSWORD: ${{ secrets.SONATYPE_OSS_PASSWORD }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./gradlew ossIndexAudit --info      
+          ./gradlew publish
+  
