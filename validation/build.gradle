@@ -98,8 +98,10 @@ publishing {
         shadow(MavenPublication) { publication ->
             project.shadow.component(publication)
             artifactId = 'hri-flink-validation-fhir'
-            version = String.valueOf(version).trim()
-            println "version: " + version
+            if (System.getenv('$GITHUB_EVENT_NAME') == null && System.getenv('$GITHUB_EVENT_NAME') == "pull_request") {
+                version = version.replace("/", "-")
+            }    
+            println "pub_version: " + version
         }
     }
 
