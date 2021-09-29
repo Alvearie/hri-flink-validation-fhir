@@ -99,12 +99,10 @@ publishing {
             project.shadow.component(publication)
             artifactId = 'hri-flink-validation-fhir'
             def ghEvent = System.getenv('GITHUB_EVENT_NAME')
-            println "ghEvent: " + ghEvent
             if (ghEvent == "pull_request" || ghEvent == "pull_request_review") {
-                println "REPLACE_ME: " + version
                 version = version.replace("/", "-")
             }    
-            println "version_to_publish: " + version
+            println "validation-version_to_pub: " + version
         }
     }
 
