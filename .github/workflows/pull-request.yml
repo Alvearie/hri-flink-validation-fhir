@@ -5,6 +5,9 @@ on:
     types: [opened]
   pull_request_review:
    types: [submitted]
+  push:
+    branches: [ '**' ]
+  workflow_dispatch:   
 
 concurrency: pr-${{ github.ref }}
 
@@ -35,11 +38,11 @@ jobs:
       run: |
         ./gradlew clean build  
 
-    - name: Gradle publish
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        ./gradlew publish
+    # - name: Gradle publish
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   run: |
+    #     ./gradlew publish
 
     - name: Check OpenSource Dependencies
       env:
