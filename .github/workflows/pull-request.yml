@@ -33,7 +33,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        ./gradlew clean build publishToMavenLocal --debug --stacktrace
+        ./gradlew clean build publishToMavenLocal --info --stacktrace
 
     - name: Check OpenSource Dependencies
       env:
