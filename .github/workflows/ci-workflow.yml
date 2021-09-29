@@ -45,4 +45,4 @@ jobs:
           SONATYPE_OSS_PASSWORD: ${{ secrets.SONATYPE_OSS_PASSWORD }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./gradlew ossIndexAudit --info         
+          ./gradlew ossIndexAudit --debug         
