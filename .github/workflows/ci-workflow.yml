@@ -32,9 +32,15 @@ jobs:
         run: |
           ./gradlew clean build          
 
-      - name: Gradle publish
+      # - name: Gradle publish
+      #   env:
+      #     USER: ${{ secrets.HRIBLD_USER }}
+      #     PASSWORD: ${{ secrets.HRIBLD_TOKEN }}
+      #   run: |
+      #     ./gradlew publish --stacktrace
+
+      - name: Check OpenSource Dependencies
         env:
-          USER: ${{ secrets.HRIBLD_USER }}
-          PASSWORD: ${{ secrets.HRIBLD_TOKEN }}
+          SONATYPE_OSS_PASSWORD: ${{ secrets.SONATYPE_OSS_PASSWORD }}
         run: |
-          ./gradlew publish --stacktrace
+          ./gradlew ossIndexAudit          
