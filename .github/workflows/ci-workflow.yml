@@ -32,13 +32,13 @@ jobs:
         run: |
           ./gradlew clean build          
 
-      - name: Gradle publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # HRIBLD_USER: ${{ secrets.HRIBLD_USER }}
-          # HRIBLD_TOKEN: ${{ secrets.HRIBLD_TOKEN }}
-        run: |
-          ./gradlew publish --stacktrace
+      # - name: Gradle publish
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     # HRIBLD_USER: ${{ secrets.HRIBLD_USER }}
+      #     # HRIBLD_TOKEN: ${{ secrets.HRIBLD_TOKEN }}
+      #   run: |
+      #     ./gradlew publish --stacktrace
 
       - name: Check OpenSource Dependencies
         env:
