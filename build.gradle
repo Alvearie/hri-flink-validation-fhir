@@ -58,6 +58,8 @@ allprojects {
                 ? System.getenv('BRANCH_NAME')
                 : getWorkingBranch()
 
+        //TODO: RMEOVE ME - Just used for testing        
+        branch = "test-publish"
         ossPassword = findProperty("SONATYPE_OSS_PASSWORD") ?: System.getenv("SONATYPE_OSS_PASSWORD")                
     }
 
