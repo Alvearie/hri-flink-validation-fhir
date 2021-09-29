@@ -101,18 +101,18 @@ publishing {
         }
     }
 
-    // repositories {
-    //     maven {
-    //         url "https://maven.pkg.github.com/Alvearie/hri-flink-validation-fhir"
-    //         credentials {
-    //            username = findProperty("GITHUB_ACTOR") ?: System.getenv("GITHUB_ACTOR")
-    //            password = findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
-    //            // username = findProperty("USER") ?: System.getenv("USER")
-    //            // password = findProperty("PASSWORD") ?: System.getenv("PASSWORD")
+    repositories {
+        maven {
+            url "https://maven.pkg.github.com/Alvearie/hri-flink-validation-fhir"
+            credentials {
+               username = findProperty("GITHUB_ACTOR") ?: System.getenv("GITHUB_ACTOR")
+               password = findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
+               // username = findProperty("USER") ?: System.getenv("USER")
+               // password = findProperty("PASSWORD") ?: System.getenv("PASSWORD")
 
-    //         }
-    //     }
-    // }
+            }
+        }
+    }
 }
 
 // this is for App Scan
