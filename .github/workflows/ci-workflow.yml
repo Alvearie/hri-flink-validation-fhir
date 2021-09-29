@@ -37,4 +37,4 @@ jobs:
           USER: ${{ secrets.HRIBLD_USER }}
           PASSWORD: ${{ secrets.HRIBLD_TOKEN }}
         run: |
-          ./gradlew publish --stacktrace --info
+          ./gradlew publish --stacktrace
