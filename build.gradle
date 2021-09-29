@@ -42,7 +42,6 @@ allprojects {
     }
 
     repositories {
-        mavenLocal()
         maven {
             url = uri("https://maven.pkg.github.com/Alvearie/hri-flink-pipeline-core")
             credentials {
@@ -54,11 +53,10 @@ allprojects {
             credentials {
                username = findProperty("GITHUB_ACTOR") ?: System.getenv("GITHUB_ACTOR")
                password = findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
-               // username = findProperty("HRIBLD_USER") ?: System.getenv("HRIBLD_USER")
-               // password = findProperty("HRIBLD_TOKEN") ?: System.getenv("HRIBLD_TOKEN")
             }
 
         }
+        mavenLocal()
         mavenCentral()
     }
 
@@ -67,8 +65,6 @@ allprojects {
                 ? System.getenv('BRANCH_NAME')
                 : getWorkingBranch()
 
-        //TODO: RMEOVE ME - Just used for testing        
-        // branch = "test-publish"
         ossPassword = findProperty("SONATYPE_OSS_PASSWORD") ?: System.getenv("SONATYPE_OSS_PASSWORD")                
     }
 
