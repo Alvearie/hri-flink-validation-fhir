@@ -42,7 +42,7 @@ allprojects {
     }
 
     repositories {
-        mavenPipelineCore {
+        maven {
             url = uri("https://maven.pkg.github.com/Alvearie/hri-flink-pipeline-core")
             credentials {
                username = findProperty("GITHUB_ACTOR") ?: System.getenv("GITHUB_ACTOR")
