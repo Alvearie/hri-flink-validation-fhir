@@ -100,11 +100,11 @@ publishing {
             artifactId = 'hri-flink-validation-fhir'
             def ghEvent = System.getenv('GITHUB_EVENT_NAME')
             println "ghEvent: " + ghEvent
-            if (System.getenv('GITHUB_EVENT_NAME') == "pull_request") {
+            if (ghEvent == "pull_request" || ghEvent == "pull_request_review") {
                 println "REPLACE_ME: " + version
                 version = version.replace("/", "-")
             }    
-            println "pub_version: " + version
+            println "version_to_publish: " + version
         }
     }
 
