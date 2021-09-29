@@ -38,11 +38,11 @@ jobs:
       #     # HRIBLD_USER: ${{ secrets.HRIBLD_USER }}
       #     # HRIBLD_TOKEN: ${{ secrets.HRIBLD_TOKEN }}
       #   run: |
-      #     ./gradlew publish --stacktrace
+      #     ./gradlew publish
 
       - name: Check OpenSource Dependencies
         env:
           SONATYPE_OSS_PASSWORD: ${{ secrets.SONATYPE_OSS_PASSWORD }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./gradlew ossIndexAudit          
+          ./gradlew ossIndexAudit --info         
