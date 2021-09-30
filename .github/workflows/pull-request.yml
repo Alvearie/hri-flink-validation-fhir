@@ -14,13 +14,13 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Set Branch Name
-      uses: nelonoel/branch-name@v1.0.1
 
     - name: Checkout Code
       uses: actions/checkout@v2      
+
+    - name: Set Branch Env Var
+      run: | 
+        echo "BRANCH_NAME=$(echo ${{github.event.pull_request.head.ref}} | tr / -)" >> $GITHUB_ENV
 
     - name: Set up adoptopenjdk8
       uses: actions/setup-java@v2
@@ -31,20 +31,13 @@ jobs:
 
     - name: Gradle build
       env:
-        PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        ./gradlew clean build  
-
-    - name: Gradle publish
-      env:
-        PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        ./gradlew publish
+        ./gradlew clean build publishToMavenLocal --info --stacktrace
 
     - name: Check OpenSource Dependencies
       env:
-        PASSWORD: ${{ secrets.SONATYPE_OSS_PASSWORD }}
+        SONATYPE_OSS_PASSWORD: ${{ secrets.SONATYPE_OSS_PASSWORD }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        ./gradlew ossIndexAudit        
-
-
+        ./gradlew ossIndexAudit --info 
