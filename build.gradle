@@ -48,9 +48,16 @@ allprojects {
                username = findProperty("GITHUB_ACTOR") ?: System.getenv("GITHUB_ACTOR")
                password = findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
             }
+
+            url "https://maven.pkg.github.com/Alvearie/hri-flink-validation-fhir"
+            credentials {
+               username = findProperty("GITHUB_ACTOR") ?: System.getenv("GITHUB_ACTOR")
+               password = findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
+            }
+
         }
-        mavenCentral()
         mavenLocal()
+        mavenCentral()
     }
 
     ext {
@@ -61,7 +68,7 @@ allprojects {
         ossPassword = findProperty("SONATYPE_OSS_PASSWORD") ?: System.getenv("SONATYPE_OSS_PASSWORD")                
     }
 
-    // If not running in travis add 'local' to the version to support local development
+    // If not running in Github Actions Actions add 'local' to the version to support local development
     if (System.getenv('BRANCH_NAME') == null || System.getenv('BRANCH_NAME') == "") {
         version = "${branch}-local-SNAPSHOT"
     } else if (System.getenv('ACTIONS_TAG') == null || System.getenv('ACTIONS_TAG') == "") {
@@ -77,7 +84,7 @@ allprojects {
         password = "${ossPassword}"
         allConfigurations = true // if true includes the dependencies in all resolvable configurations. By default is false, meaning only 'compileClasspath', 'runtimeClasspath', 'releaseCompileClasspath' and 'releaseRuntimeClasspath' are considered
         useCache = true // true by default
-        cacheExpiration = 'PT86400S' // note: time in seconds; 12 hours if omitted. It must follow the Joda Time specification at https://www.javadoc.io/doc/joda-time/joda-time/2.10.4/org/joda/time/Duration.html#parse-java.lang.String-
+        cacheExpiration = 'PT86400S' // note: time in seconds (24hrs); 12 hours if omitted. It must follow the Joda Time specification at https://www.javadoc.io/doc/joda-time/joda-time/2.10.4/org/joda/time/Duration.html#parse-java.lang.String-
         colorEnabled = true // if true prints vulnerability description in color. By default is true.
         printBanner = true // if true will print ASCII text banner. By default is true.
 
