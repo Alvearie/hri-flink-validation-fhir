@@ -36,8 +36,25 @@ jobs:
         ./gradlew clean build publishToMavenLocal --info --stacktrace
 
     - name: Check OpenSource Dependencies
+      # override default -eo pipefail
+      shell: bash --noprofile --norc {0}    
       env:
         SONATYPE_OSS_PASSWORD: ${{ secrets.SONATYPE_OSS_PASSWORD }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        ./gradlew ossIndexAudit --info 
+        ./gradlew ossIndexAudit --info >> os_vulnerabilities.log
+        found=$?
+        echo "VULNERABILITIES=$found" >> $GITHUB_ENV
+        [[ "$found" == 1 ]] && echo "::error ::Vulnerabilities found in dependencies."
+        exit 0
+
+    - uses: actions/github-script@v4
+      if: ${{ env.VULNERABILITIES != 0 }}
+      with:
+        script: |
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: "## ⚠️ Vulnerabilities found in dependencies.\nSee the 'PR -> Vulnerability Checks' logs for more details: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          })
