@@ -38,10 +38,6 @@ publishing {
         mavenJava(MavenPublication) {
             artifactId = 'hri-flink-validator-fhir'
             from components.java
-            def ghEvent = System.getenv('GITHUB_EVENT_NAME')
-            if (ghEvent == "pull_request" || ghEvent == "pull_request_review") {
-                version = version.replace("/", "-")
-            }    
             println "validator-version_to_pub: " + version            
         }
     }
