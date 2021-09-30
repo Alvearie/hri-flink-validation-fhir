@@ -16,10 +16,7 @@ jobs:
     steps:
 
     - name: Checkout Code
-      uses: actions/checkout@v2      
-
-    - name: Copyright Check
-      run: ./copyrightCheck.sh      
+      uses: actions/checkout@v2        
 
     - name: Set Branch Env Var
       run: | 
