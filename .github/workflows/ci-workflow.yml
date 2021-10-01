@@ -87,9 +87,11 @@ jobs:
           ./run-ivttests.sh
 
       - name: Run Nightly Tests
+        env:
+          CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY }}
         run: |
           ibmcloud ks cluster config --cluster hri-dev1-cluster-1
-          ./gradlew copyNightlyTestDependencies -PcloudApiKey=${CLOUD_API_KEY}
+          ./gradlew copyNightlyTestDependencies -PcloudApiKey=$CLOUD_API_KEY
           ./run-nightlytests.sh
 
       - name: Upload Test Results
