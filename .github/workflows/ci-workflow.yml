@@ -21,14 +21,14 @@ jobs:
       ES_INSTANCE: hri-dev1-event-streams
       HRI_SERVICE_URL: https://hri-mgmt-api/hri
       IAM_CLOUD_URL: https://iam.cloud.ibm.com
-      INPUT_TOPIC: ingest.test.flink-validation-passthrough.in
-      INVALID_TOPIC: ingest.test.flink-validation-passthrough.invalid
+      INPUT_TOPIC: ingest.test.flink-validation-fhir.in
+      INVALID_TOPIC: ingest.test.flink-validation-fhir.invalid
       KAFKA_BROKERS: broker-0-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-1-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-2-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-3-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-4-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-5-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093
       NAMESPACE: develop
-      NOTIFICATION_TOPIC: ingest.test.flink-validation-passthrough.notification
+      NOTIFICATION_TOPIC: ingest.test.flink-validation-fhir.notification
       OIDC_HRI_DATA_INTEGRATOR_CLIENT_ID: e6ae020a-ff2a-4594-8337-0acfdf76f710
       OIDC_HRI_INTERNAL_CLIENT_ID: e1284680-4edf-44d2-b65c-d63097906fae
-      OUTPUT_TOPIC: ingest.test.flink-validation-passthrough.out
+      OUTPUT_TOPIC: ingest.test.flink-validation-fhir.out
 
       CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY }}
       ELASTIC_PASSWORD: ${{ secrets.ELASTIC_PASSWORD }}
