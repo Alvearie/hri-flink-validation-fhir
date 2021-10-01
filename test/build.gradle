@@ -24,12 +24,12 @@ task downloadPerfTestRecords()  {
     outputs.dir(rootDir + "/test_data/synthetic_mass/fhir")
 
     doLast {
-        if (!project.hasProperty("cloudApiKey")) {
+        if (!project.hasProperty("CLOUD_API_KEY")) {
             println "Required API key parameter is missing, will not download FHIR records."
             return
         }
 
-        def apiKey = project.getProperty("cloudApiKey")
+        def apiKey = project.getProperty("CLOUD_API_KEY")
 
         println "Requesting IAM token..."
         def command = ['curl', '-X', 'POST', 'https://iam.cloud.ibm.com/identity/token', '-d', 'grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=' + apiKey]
