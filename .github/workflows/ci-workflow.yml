@@ -94,6 +94,7 @@ jobs:
           ./run-ivttests.sh
 
       - name: Run Nightly Tests
+        if: github.ref == 'refs/heads/develop' && github.event_name == 'workflow_dispatch'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
