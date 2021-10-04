@@ -23,6 +23,7 @@ require 'kafka'
 require 'base64'
 require 'zstd-ruby'
 require 'concurrent'
+require 'nokogiri'
 
 require 'hritesthelpers'
 
