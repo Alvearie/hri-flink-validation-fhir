@@ -96,7 +96,7 @@ jobs:
           ./run-nightlytests.sh
 
       - name: Upload Test Results
-        if: github.ref == 'refs/heads/WHFHRI-672' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
         run: |
           ./test/spec/upload_test_reports.rb IVT
           ./test/spec/upload_test_reports.rb Nightly
