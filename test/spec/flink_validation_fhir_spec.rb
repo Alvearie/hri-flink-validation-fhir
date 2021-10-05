@@ -31,13 +31,13 @@ describe 'Flink Validation FHIR Job' do
     @event_streams_helper.create_topic(@invalid_topic, 1)
     @event_streams_helper.verify_topic_creation([@input_topic, @output_topic, @notification_topic, @invalid_topic])
 
-    @output_consumer_group = "flink-validation-fhir-#{@git_branch}-#{timestamp}-output-consumer"
-    @notification_consumer_group = "flink-validation-fhir-#{@git_branch}-#{timestamp}-notification-consumer"
-    @invalid_consumer_group = "flink-validation-fhir-#{@git_branch}-#{timestamp}-invalid-consumer"
-    @kafka = Kafka.new(ENV['KAFKA_BROKERS'], client_id: "flink-validation-fhir-#{@git_branch}-#{timestamp}", connect_timeout: 10, socket_timeout: 10, sasl_plain_username: 'token', sasl_plain_password: ENV['SASL_PLAIN_PASSWORD'], ssl_ca_certs_from_system: true)
+    @output_consumer_group = "hri-flink-validation-fhir-#{@git_branch}-#{timestamp}-output-consumer"
+    @notification_consumer_group = "hri-flink-validation-fhir-#{@git_branch}-#{timestamp}-notification-consumer"
+    @invalid_consumer_group = "hri-flink-validation-fhir-#{@git_branch}-#{timestamp}-invalid-consumer"
+    @kafka = Kafka.new(ENV['KAFKA_BROKERS'], client_id: "hri-flink-validation-fhir-#{@git_branch}-#{timestamp}", connect_timeout: 10, socket_timeout: 10, sasl_plain_username: 'token', sasl_plain_password: ENV['SASL_PLAIN_PASSWORD'], ssl_ca_certs_from_system: true)
 
     #Upload Jar File
-    @test_jar_id = @flink_helper.upload_jar_from_dir("flink-validation-fhir-#{@git_branch}.jar", File.join(File.dirname(__FILE__), '../../validation/build/libs'), @flink_api_oauth_token, /hri-flink-validation-fhir-.+.jar/)
+    @test_jar_id = @flink_helper.upload_jar_from_dir("hri-flink-validation-fhir-#{@git_branch}.jar", File.join(File.dirname(__FILE__), '../../validation/build/libs'), @flink_api_oauth_token, /hri-flink-validation-fhir-.+.jar/)
 
     #Start Job
     @flink_job = FlinkJob.new(@flink_helper, @event_streams_helper, @kafka, @test_jar_id, TENANT_ID)
@@ -84,7 +84,7 @@ describe 'Flink Validation FHIR Job' do
         @flink_helper.verify_jar_deleted(@test_jar_id, @flink_api_oauth_token)
       end
 
-      response = @elastic.es_delete_by_query(TENANT_ID, "name:flink-validation-fhir-#{@git_branch}*")
+      response = @elastic.es_delete_by_query(TENANT_ID, "name:hri-flink-validation-fhir-#{@git_branch}*")
       response.nil? ? (raise 'Elastic batch delete did not return a response') : (raise 'Failed to delete Elastic batches' unless response.code == 200)
       Logger.new(STDOUT).info("Delete test batches by query response #{response.body}")
     ensure
@@ -97,8 +97,8 @@ describe 'Flink Validation FHIR Job' do
 
   it 'should output all successfully validated records with the same key, headers, and body' do
     batch_info = {
-      batch_name: "flink-validation-fhir-#{@git_branch}-valid-batch-БВГДЖЗИЙЛ",
-      batch_data_type: 'flink-validation-fhir-batch-あいうえおか',
+      batch_name: "hri-flink-validation-fhir-#{@git_branch}-valid-batch-БВГДЖЗИЙЛ",
+      batch_data_type: 'hri-flink-validation-fhir-batch-あいうえおか',
       batch_metadata: 'ᚠᛇᚻ᛫ᛒᛦᚦ᛫ᚠᚱᚩᚠᚢᚱ'
     }
     expected_record_count = {
@@ -135,8 +135,8 @@ describe 'Flink Validation FHIR Job' do
       expectedRecordCount: 15
     }
     batch_template = {
-      name: "flink-validation-fhir-#{@git_branch}-valid-batch-name",
-      dataType: 'flink-validation-fhir-batch',
+      name: "hri-flink-validation-fhir-#{@git_branch}-valid-batch-name",
+      dataType: 'hri-flink-validation-fhir-batch',
       topic: @input_topic
     }
     @batch_id_1 = @mgmt_api_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)
@@ -228,8 +228,8 @@ describe 'Flink Validation FHIR Job' do
 
   it 'should stop sending messages to the output topic when a termination notification message is received' do
     batch_template = {
-      name: "flink-validation-fhir-#{@git_branch}-terminated-batch-name",
-      dataType: 'flink-validation-fhir-batch',
+      name: "hri-flink-validation-fhir-#{@git_branch}-terminated-batch-name",
+      dataType: 'hri-flink-validation-fhir-batch',
       topic: @input_topic
     }
     @batch_id = @mgmt_api_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)
@@ -264,8 +264,8 @@ describe 'Flink Validation FHIR Job' do
   it 'should stop sending messages to the invalid topic when more than 5 invalid records are received' do
     invalid_threshold = 5
     batch_template = {
-      name: "flink-validation-fhir-#{@git_branch}-invalid-batch-name",
-      dataType: 'flink-validation-fhir-batch',
+      name: "hri-flink-validation-fhir-#{@git_branch}-invalid-batch-name",
+      dataType: 'hri-flink-validation-fhir-batch',
       topic: @input_topic,
       invalidThreshold: invalid_threshold
     }
@@ -289,8 +289,8 @@ describe 'Flink Validation FHIR Job' do
       expectedRecordCount: 15
     }
     batch_template = {
-      name: "flink-validation-fhir-#{@git_branch}-mixed-batch-name",
-      dataType: 'flink-validation-fhir-batch',
+      name: "hri-flink-validation-fhir-#{@git_branch}-mixed-batch-name",
+      dataType: 'hri-flink-validation-fhir-batch',
       topic: @input_topic
     }
     @batch_id = @mgmt_api_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)
@@ -319,8 +319,8 @@ describe 'Flink Validation FHIR Job' do
       expectedRecordCount: 15
     }
     batch_template = {
-      name: "flink-validation-fhir-#{@git_branch}-valid-batch-name",
-      dataType: 'flink-validation-fhir-batch',
+      name: "hri-flink-validation-fhir-#{@git_branch}-valid-batch-name",
+      dataType: 'hri-flink-validation-fhir-batch',
       topic: @input_topic
     }
     @batch_id = @mgmt_api_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)
@@ -346,8 +346,8 @@ describe 'Flink Validation FHIR Job' do
       expectedRecordCount: 5
     }
     batch_template = {
-      name: "flink-validation-fhir-#{@git_branch}-valid-batch-name",
-      dataType: 'flink-validation-fhir-batch',
+      name: "hri-flink-validation-fhir-#{@git_branch}-valid-batch-name",
+      dataType: 'hri-flink-validation-fhir-batch',
       topic: @input_topic
     }
     @batch_id = @mgmt_api_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)
@@ -369,8 +369,8 @@ describe 'Flink Validation FHIR Job' do
   end
 
   it 'should fail the batch if more records than expected are received after the batch status is sendCompleted but within the timeout window' do
-    batch_name = "flink-validation-fhir-#{@git_branch}-valid-batch"
-    batch_data_type = 'flink-validation-fhir-batch'
+    batch_name = "hri-flink-validation-fhir-#{@git_branch}-valid-batch"
+    batch_data_type = 'hri-flink-validation-fhir-batch'
     expected_record_count = {
       expectedRecordCount: 15
     }
@@ -407,8 +407,8 @@ describe 'Flink Validation FHIR Job' do
   end
 
   it 'should not fail the batch if more records than expected are received after the batch status is sendCompleted and the timeout window has expired' do
-    batch_name = "flink-validation-fhir-#{@git_branch}-valid-batch"
-    batch_data_type = 'flink-validation-fhir-batch'
+    batch_name = "hri-flink-validation-fhir-#{@git_branch}-valid-batch"
+    batch_data_type = 'hri-flink-validation-fhir-batch'
     expected_record_count = {
       expectedRecordCount: 15
     }

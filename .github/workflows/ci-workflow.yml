@@ -99,7 +99,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ibmcloud ks cluster config --cluster hri-dev1-cluster-1
-          ./gradlew copyNightlyTestDependencies -PcloudApiKey=$CLOUD_API_KEY
+          ./gradlew copyNightlyTestDependencies
           ./run-nightlytests.sh
 
       - name: Upload Test Results
@@ -126,6 +126,6 @@ jobs:
         id: slack
         uses: slackapi/slack-github-action@v1.14.0
         with:
-          payload: "{\"Repo\":\"${{ github.repository }}\",\"Workflow\":\"${{ github.workflow }}\",\"Branch\":\"${{ env.BRANCH_NAME }}\",\"Link\":\"https://github.com/Alvearie/hri-mgmt-api/actions/runs/${{ github.run_id }}\"}"
+          payload: "{\"Repo\":\"${{ github.repository }}\",\"Workflow\":\"${{ github.workflow }}\",\"Branch\":\"${{ env.BRANCH_NAME }}\",\"Link\":\"https://github.com/Alvearie/hri-flink-validation-fhir/actions/runs/${{ github.run_id }}\"}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
