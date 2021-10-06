@@ -36,6 +36,7 @@ jobs:
       run: |
         ./gradlew clean build publishToMavenLocal
 
+## NOTE: move me to code-scans workflow when implement SonarCloud
 #      TODO: Add SonarCloud (Static Code) scan after permissions issue is fixed
 #      - name: SonarCloud Scan
 #          uses: sonarsource/sonarcloud-github-action@v1.6
