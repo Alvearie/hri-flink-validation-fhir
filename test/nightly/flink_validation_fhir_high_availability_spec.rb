@@ -8,7 +8,7 @@ require_relative '../env'
 #   - run `./gradlew build publishToMavenLocal` in the project's root directory to build the hri-flink-validation-fhir jar
 #   - run `./gradlew copyNightlyTestDependencies` in the project's root directory to prep the jar for this test's use
 #
-# Anytime the hri-flink-validation-fhir jar is recompiled, the steps above need to be executed for these tests to pick up the
+# Anytime the flink-validation-fhir jar is recompiled, the steps above need to be executed for these tests to pick up the
 # new version
 
 describe 'Flink Validation FHIR High Availability Job' do
@@ -39,13 +39,13 @@ describe 'Flink Validation FHIR High Availability Job' do
     @event_streams_helper.create_topic(@invalid_topic, 1)
     @event_streams_helper.verify_topic_creation([@input_topic, @output_topic, @notification_topic, @invalid_topic])
 
-    @output_consumer_group = "hri-flink-validation-fhir-#{@branch_name}-#{timestamp}-output-consumer"
-    @notification_consumer_group = "hri-flink-validation-fhir-#{@branch_name}-#{timestamp}-notification-consumer"
-    @invalid_consumer_group = "hri-flink-validation-fhir-#{@branch_name}-#{timestamp}-invalid-consumer"
-    @kafka = Kafka.new(ENV['KAFKA_BROKERS'], client_id: "hri-flink-validation-fhir-#{@branch_name}-#{timestamp}", connect_timeout: 10, socket_timeout: 10, sasl_plain_username: 'token', sasl_plain_password: ENV['SASL_PLAIN_PASSWORD'], ssl_ca_certs_from_system: true)
+    @output_consumer_group = "flink-validation-fhir-#{@branch_name}-#{timestamp}-output-consumer"
+    @notification_consumer_group = "flink-validation-fhir-#{@branch_name}-#{timestamp}-notification-consumer"
+    @invalid_consumer_group = "flink-validation-fhir-#{@branch_name}-#{timestamp}-invalid-consumer"
+    @kafka = Kafka.new(ENV['KAFKA_BROKERS'], client_id: "flink-validation-fhir-#{@branch_name}-#{timestamp}", connect_timeout: 10, socket_timeout: 10, sasl_plain_username: 'token', sasl_plain_password: ENV['SASL_PLAIN_PASSWORD'], ssl_ca_certs_from_system: true)
 
     #Upload Jar File
-    @test_jar_id = @flink_helper.upload_jar_from_dir('hri-flink-validation-fhir-nightly-test-jar.jar', File.join(File.dirname(__FILE__), '../dependencies'), @flink_api_oauth_token, /hri-flink-validation-fhir-.+.jar/)
+    @test_jar_id = @flink_helper.upload_jar_from_dir('flink-validation-fhir-nightly-test-jar.jar', File.join(File.dirname(__FILE__), '../dependencies'), @flink_api_oauth_token, /hri-flink-validation-fhir-.+.jar/)
 
     @flink_job = FlinkJob.new(@flink_helper, @event_streams_helper, @kafka, @test_jar_id, TENANT_ID)
     @flink_job.start_job(@flink_api_oauth_token, 1, BATCH_COMPLETION_DELAY, false, {input_topic: @input_topic})
@@ -90,7 +90,7 @@ describe 'Flink Validation FHIR High Availability Job' do
         @flink_helper.verify_jar_deleted(@test_jar_id, @flink_api_oauth_token)
       end
 
-      response = @elastic.es_delete_by_query(TENANT_ID, "name:hri-flink-validation-fhir-#{ENV['BRANCH_NAME']}*")
+      response = @elastic.es_delete_by_query(TENANT_ID, "name:flink-validation-fhir-#{ENV['BRANCH_NAME']}*")
       response.nil? ? (raise 'Elastic batch delete did not return a response') : (raise 'Failed to delete Elastic batches' unless response.code == 200)
       Logger.new(STDOUT).info("Delete test batches by query response #{response.body}")
     ensure
@@ -106,8 +106,8 @@ describe 'Flink Validation FHIR High Availability Job' do
           expectedRecordCount: 15
       }
       batch_template = {
-          name: "hri-flink-validation-fhir-#{ENV['BRANCH_NAME']}-valid-batch-name",
-          dataType: 'hri-flink-validation-fhir-batch',
+          name: "flink-validation-fhir-#{ENV['BRANCH_NAME']}-valid-batch-name",
+          dataType: 'flink-validation-fhir-batch',
           topic: @input_topic
       }
       @batch_id = @mgmt_api_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)
@@ -139,8 +139,8 @@ describe 'Flink Validation FHIR High Availability Job' do
         expectedRecordCount: 15
     }
     batch_template = {
-        name: "hri-flink-validation-fhir-#{ENV['BRANCH_NAME']}-valid-batch-name",
-        dataType: 'hri-flink-validation-fhir-batch',
+        name: "flink-validation-fhir-#{ENV['BRANCH_NAME']}-valid-batch-name",
+        dataType: 'flink-validation-fhir-batch',
         topic: @input_topic
     }
     @batch_id = @mgmt_api_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)
@@ -172,7 +172,7 @@ describe 'Flink Validation FHIR High Availability Job' do
         break
       end
     end
-    raise "Jar with name 'hri-flink-validation-fhir-nightly-test-jar.jar' not found" unless jar_found
+    raise "Jar with name 'flink-validation-fhir-nightly-test-jar.jar' not found" unless jar_found
 
     @record_validator.all_output_records(@kafka_output_consumer, @output_topic, @batch_id, key - 1, true)
 
@@ -187,8 +187,8 @@ describe 'Flink Validation FHIR High Availability Job' do
         expectedRecordCount: 15
     }
     batch_template = {
-        name: "hri-flink-validation-fhir-#{ENV['BRANCH_NAME']}-valid-batch-name",
-        dataType: 'hri-flink-validation-fhir-batch',
+        name: "flink-validation-fhir-#{ENV['BRANCH_NAME']}-valid-batch-name",
+        dataType: 'flink-validation-fhir-batch',
         topic: @input_topic
     }
     @batch_id = @mgmt_api_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)

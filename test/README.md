@@ -108,7 +108,7 @@
      
       Then run the tests with:
      
-     ```rspec test/nightly/flink_validation_high_availability_spec.rb --tag ~@broken```
+     ```rspec test/nightly/flink_validation_fhir_high_availability_spec.rb --tag ~@broken```
      
      The load test requires a bucket of auto-generated, large fhir records. The following command generates the records in the `test/test_data/synthea` directory.
      
