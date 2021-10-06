@@ -36,6 +36,14 @@ jobs:
       run: |
         ./gradlew clean build publishToMavenLocal
 
+#      TODO: Add SonarCloud (Static Code) scan after permissions issue is fixed
+#      - name: SonarCloud Scan
+#          uses: sonarsource/sonarcloud-github-action@v1.6
+#          with:
+#            projectBaseDir: ./src
+#          env:
+#            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
     - name: Check OpenSource Dependencies
       # override default -eo pipefail
       shell: bash --noprofile --norc {0}    

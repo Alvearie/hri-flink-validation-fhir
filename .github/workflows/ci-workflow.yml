@@ -108,14 +108,6 @@ jobs:
           ./test/spec/upload_test_reports.rb IVT
           ./test/spec/upload_test_reports.rb Nightly
 
-#      TODO: Add SonarCloud (Static Code) scan after permissions issue is fixed
-#      - name: SonarCloud Scan
-#          uses: sonarsource/sonarcloud-github-action@v1.6
-#          with:
-#            projectBaseDir: ./src
-#          env:
-#            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
       - name: Gradle publish
         if: ${{ github.ref == 'refs/heads/develop' }}
         run: |
