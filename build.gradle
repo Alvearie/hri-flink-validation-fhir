@@ -21,9 +21,6 @@ allprojects {
     apply plugin: "org.sonatype.gradle.plugins.scan"
 
     ext {
-        //TODO: CHANGE ME BACK! (Temp replace with WHFHRI-671-SNAPSHOT branch version for testing)
-        //NOTE: Using GitHub package version published on the  WHFHRI-671-SNAPSHOT branch for testing GH Actions changes
-        //pipelineCoreVersion = 'develop-SNAPSHOT'
         pipelineCoreVersion = 'develop-SNAPSHOT'
         javaVersion = '1.8'
         flinkVersion = '1.10.0'

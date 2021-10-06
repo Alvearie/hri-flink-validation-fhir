@@ -98,7 +98,6 @@ publishing {
         shadow(MavenPublication) { publication ->
             project.shadow.component(publication)
             artifactId = 'hri-flink-validation-fhir'
-            println "validation-version_to_pub: " + version
         }
     }
 
