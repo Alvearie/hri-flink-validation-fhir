@@ -134,7 +134,7 @@ class FhirValidationJobTest extends AnyFunSuite with BeforeAndAfter {
     err should include ("It must start with \"ingest.\"")
   }
 
-  test("it should throw exception for invalid inputTopic Value with the MgmtAPI") {
+  test("it should throw exception for invalid inputTopic Value with the HRI MgmtAPI") {
     val badInputTopicValue = "ingest-monkey22-noPeriodSeparators"
     val badInputTopicArg = "--input=" + badInputTopicValue
 

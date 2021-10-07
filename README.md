@@ -13,7 +13,7 @@ Note: This software uses Apache Flink (https://flink.apache.org/) for streaming 
 ## Getting Started
 
 ### Prerequisites
-* Java 1.8 - you can use an official [distribution](https://www.java.com/en/download/manual.jsp) or a package manager like `homebrew` for mac
+* Java 1.8 -  IBM requires the use of AdoptOpenJDK java distribution which you can download from [this site](https://adoptopenjdk.net/?variant=openjdk8) or install using a package manager like `homebrew` for mac
 * Scala 2.12.11 - you can use an official [distribution](https://www.scala-lang.org/download/) or a package manager like `homebrew` for mac
 * Java/Scala IDE (Optional) - we use IntelliJ, but it requires a licensed version.
 * Ruby (Optional) - required for integration tests. See [testing](test/README.md) for more details.
