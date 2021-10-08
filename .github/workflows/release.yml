@@ -48,6 +48,3 @@ jobs:
           payload: "{\"Repo\":\"${{ github.repository }}\",\"Workflow\":\"${{ github.workflow }}\",\"Branch\":\"${{ env.BRANCH_NAME }}\",\"Link\":\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
-
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
