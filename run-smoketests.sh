@@ -32,6 +32,8 @@ echo "Final Results"
 echo "----------------"
 echo "PASSING: $passing"
 echo "FAILING: $failing"
+echo "OUTPUT: $output"
+echo
 total=$(($passing + $failing))
 
 date=`date`
