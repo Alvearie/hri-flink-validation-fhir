@@ -16,14 +16,14 @@ buildscript {
 allprojects {
     apply plugin: 'scala'
     group = 'org.alvearie.hri.flink'
-    version = '2.1-1.0.1'
+    version = 'support-2.x-SNAPSHOT' // TODO: Change when creating first tagged version of passthrough in Alvearie.
 
     apply plugin: "org.sonatype.gradle.plugins.scan"
 
     ext {
         //Temporarily changed for testing Alvearie CI updates
         //pipelineCoreVersion = '2.1-1.0.1'
-        pipelineCoreVersion = 'support-2.x'
+        pipelineCoreVersion = 'support-2.x-SNAPSHOT'     // TODO: Change when first tagged version of core published
         javaVersion = '1.8'
         flinkVersion = '1.10.0'
         scalaBinaryVersion = '2.12'
@@ -42,15 +42,16 @@ allprojects {
 
     repositories {
         ['wh-wffh-maven-local'].each { repo ->
-        maven {
-            url = uri("https://maven.pkg.github.com/Alvearie/hri-flink-pipeline-core")
-            credentials {
-               username = findProperty("GITHUB_ACTOR") ?: System.getenv("GITHUB_ACTOR")
-               password = findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
-            }        
+            maven {
+                url = uri("https://maven.pkg.github.com/Alvearie/hri-flink-pipeline-core")
+                credentials {
+                   username = findProperty("GITHUB_ACTOR") ?: System.getenv("GITHUB_ACTOR")
+                   password = findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
+                }        
+            }
+            mavenLocal()
+            mavenCentral()
         }
-        mavenLocal()
-        mavenCentral()
     }
 
     ext {
@@ -109,4 +110,3 @@ def getWorkingBranch() {
     println "Working branch: " + workingBranch
     return workingBranch
 }
-
