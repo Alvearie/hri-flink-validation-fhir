@@ -79,7 +79,6 @@ jobs:
         run: |
           gem install bundler
           BUNDLE_GEMFILE="./test/Gemfile" bundle install
-          gem specific_install -l https://github.com/Alvearie/hri-test-helpers.git main
           curl -sL https://ibm.biz/idt-installer | bash
           ibmcloud login --apikey $CLOUD_API_KEY -r us-east || { echo 'IBM Cloud CLI login failed!'; exit 1; }
           ibmcloud plugin install event-streams
