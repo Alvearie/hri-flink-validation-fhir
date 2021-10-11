@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-files=$(find . -name "*.scala" -or -name "*.sh")
+files=$(find . -name "*.scala" -or -name "*.rb" -or -name "*.sh")
 
 rtn=0
 for file in $files; do
