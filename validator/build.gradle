@@ -42,12 +42,11 @@ publishing {
     }
 
     repositories {
-        //TODO: replace with Github packages maven location & credentials
         maven {
-            url 'SOME_GH_ACTIONS_URL'
+            url "https://maven.pkg.github.com/Alvearie/hri-flink-validation-fhir"
             credentials {
-                username findProperty('user') ?: ''
-                password findProperty('password') ?: ''
+                username = findProperty("GITHUB_ACTOR") ?: System.getenv("GITHUB_ACTOR")
+                password = findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
             }
         }
     }

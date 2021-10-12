@@ -91,23 +91,3 @@
 
    - From within the top directory of this project, run the integration tests with:   
      ```rspec test/spec --tag ~@broken```
-     
-      If you want to run the high availability, performance or load tests, you must first run the following commands in the `hri-flink-validation-fhir` repo:
-      ```bash
-         ./gradlew build publishToMavenLocal
-         ./gradlew copyNightlyTestDependencies -PcloudApiKey=$CLOUD_API_KEY
-      ```
-      Then run the tests with:
-     
-     ```rspec test/nightly/flink_validation_high_availability_spec.rb --tag ~@broken```
-     
-     The load test requires a bucket of auto-generated, large fhir records. The following command generates the records in the `test/test_data/synthea` directory.
-     
-     ```java -jar test/dependencies/synthea-with-dependencies.jar -p 100 -c test/test_data/synthea.properties```
-     
-     The Synthea records are automatically generated when the `copyNightlyTestDependencies` task is run. Alternatively,
-     you can use the `generateSyntheaRecords` task to generate the records independently.
-     
-     The performance test requires a different bucket of static records stored in a zip file in COS. These records are 
-     also automatically downloaded when the `copyNightlyTestDependencies` task is run. Alternitively, you can use the
-     `downloadPerfTestRecords` task to download the records independently.

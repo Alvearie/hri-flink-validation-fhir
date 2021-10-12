@@ -1,3 +1,7 @@
+# (C) Copyright IBM Corp. 2021
+#
+# SPDX-License-Identifier: Apache-2.0
+
 #!/usr/bin/env bash
 
 passing=0
@@ -28,6 +32,8 @@ echo "Final Results"
 echo "----------------"
 echo "PASSING: $passing"
 echo "FAILING: $failing"
+echo "OUTPUT: $output"
+echo
 total=$(($passing + $failing))
 
 date=`date`
