@@ -77,7 +77,6 @@ jobs:
           bundler-cache: false
 
       - name: Install Ruby Gems, Run IVT
-        if: github.ref == 'refs/heads/never'
         run: |
           gem install bundler
           BUNDLE_GEMFILE="./test/Gemfile" bundle install
@@ -109,7 +108,7 @@ jobs:
           ./gradlew publish
 
       - name: Trigger Validation Jar Build
-        if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/WHFHRI-704'
+        if: github.ref == 'refs/heads/develop'
         env:
           TRAVIS_TOKEN: ${{ secrets.TRAVIS_TOKEN }}
           VALIDATION_REPO_OWNER: ${{ secrets.VALIDATION_REPO_OWNER }}
