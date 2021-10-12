@@ -25,7 +25,7 @@ allprojects {
         //pipelineCoreVersion = '2.1-1.0.1'
         pipelineCoreVersion = 'support-2.x-SNAPSHOT'     // TODO: Change when first tagged version of core published
         javaVersion = '1.8'
-        flinkVersion = '1.10.0'
+        flinkVersion = '1.10.3'
         scalaBinaryVersion = '2.12'
         scalaVersion = '2.12.11'
         scalaTestVersion = '3.1.1'
