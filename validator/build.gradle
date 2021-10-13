@@ -27,7 +27,7 @@ dependencies {
     testImplementation "org.scalatest:scalatest_${scalaBinaryVersion}:${scalaTestVersion}"
 
     testRuntimeOnly  "org.apache.logging.log4j:log4j-core:${log4jVersion}"
-    testRuntimeOnly  "org.slf4j:slf4j-log4j12:${slf4jVersion}"
+    testRuntimeOnly "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
 
     testRuntimeOnly "com.vladsch.flexmark:flexmark-all:0.35.10"
     testRuntimeOnly  'org.pegdown:pegdown:1.4.2'
