@@ -107,7 +107,11 @@ allprojects {
             '7a6a9dd2-67de-4e2a-b406-7aa4a4ce29cc', '8ea14e38-e6cc-48d9-bfe4-ec89f93596e7',
 
             //pkg:maven/org.apache.logging.log4j/log4j-core@2.11.2 (from org.scala-sbt:zinc_2.12:1.3.5 - Used by gradle scala plugin only)
-            'd3477f9c-032a-44a7-a5e1-02ae35e4737c'
+            'd3477f9c-032a-44a7-a5e1-02ae35e4737c',
+
+            //pkg:maven/log4j/log4j@1.2.17 (from com.vladsch.flexmark:flexmark-all:0.35.10 - Used in Unit Test runs only)
+            'e6e4ebea-da12-4bde-8f24-6272925ad093'
+
         ]        
 
         // ossIndexAudit can be configured to exclude vulnerabilities from matching
