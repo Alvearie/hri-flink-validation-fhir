@@ -21,10 +21,20 @@ dependencies {
     implementation "commons-io:commons-io:2.4" // not sure why this isn't getting picked up from hri-flink-pipeline-core
     implementation "org.apache.flink:flink-connector-kafka_${scalaBinaryVersion}:${flinkVersion}" // not sure why this isn't getting picked up from hri-flink-pipeline-core
     implementation "com.ibm.fhir:fhir-model:4.7.1"
+    compileOnly("org.scala-lang:scala-compiler") {
+        version {
+            require("${scalaVersion}")
+        }
+    }      
 
     //Test dependencies here:
     testImplementation "org.scalactic:scalactic_${scalaBinaryVersion}:${scalaTestVersion}"
     testImplementation "org.scalatest:scalatest_${scalaBinaryVersion}:${scalaTestVersion}"
+    testImplementation("org.scala-lang:scala-compiler") {
+        version {
+            require("${scalaVersion}")
+        }
+    }    
 
     testRuntimeOnly  "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     testRuntimeOnly "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
