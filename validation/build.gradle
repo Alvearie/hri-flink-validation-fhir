@@ -42,11 +42,6 @@ dependencies {
     implementation "org.apache.flink:flink-streaming-scala_${scalaBinaryVersion}:${flinkVersion}"
     implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     implementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
-    compileOnly("org.scala-lang:scala-compiler") {
-        version {
-            require("${scalaVersion}")
-        }
-    }        
 
     // --------------------------------------------------------------
     // Dependencies that should be part of the shadow jar, e.g.
@@ -139,4 +134,3 @@ reportScoverage.doLast {
 
 reportScoverage.mustRunAfter test
 build.dependsOn reportScoverage
-
