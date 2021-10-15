@@ -28,6 +28,7 @@ configurations {
 
     // always exclude these (also from transitive dependencies) since they are provided by Flink
     flinkShadowJar.exclude group: 'org.apache.flink', module: 'force-shading'
+    flinkShadowJar.exclude group: 'org.scala-lang', module: 'scala-compiler'
     flinkShadowJar.exclude group: 'com.google.code.findbugs', module: 'jsr305'
     flinkShadowJar.exclude group: 'org.slf4j'
     flinkShadowJar.exclude group: 'log4j'
@@ -37,16 +38,16 @@ configurations {
 dependencies {
     // Scala lib
     implementation "org.scala-lang:scala-library:${scalaVersion}"
-
     implementation "org.apache.flink:flink-scala_${scalaBinaryVersion}:${flinkVersion}"
-    implementation "org.apache.flink:flink-streaming-scala_${scalaBinaryVersion}:${flinkVersion}"
-    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
-    implementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
-    compileOnly("org.scala-lang:scala-compiler") {
+    implementation("org.scala-lang:scala-compiler") {
         version {
             require("${scalaVersion}")
         }
-    }    
+    }      
+    implementation "org.apache.flink:flink-streaming-scala_${scalaBinaryVersion}:${flinkVersion}"
+    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
+  
 
     // --------------------------------------------------------------
     // Dependencies that should be part of the shadow jar, e.g.
@@ -140,4 +141,3 @@ reportScoverage.doLast {
 
 reportScoverage.mustRunAfter test
 build.dependsOn reportScoverage
-
