@@ -145,6 +145,7 @@ project(":validator") {
             property "sonar.scala.coverage.reportPaths", "./build/reports/scoverage/scoverage.xml,./build/reports/scoverage/cobertura.xml"
         }
     }}
+
 dependencies {
     // Scala lib
     implementation "org.scala-lang:scala-library:${scalaVersion}"
