@@ -135,7 +135,6 @@ sonarqube {
 project(":validation") {
     sonarqube {
         properties {
-            property "sonar.projectName", "Alvearie_hri-flink-pipeline-core-fhir-validation"
             property "sonar.scala.coverage.reportPaths", "./build/reports/scoverage/scoverage.xml,./build/reports/scoverage/cobertura.xml"
         }
     }}
@@ -143,7 +142,6 @@ project(":validation") {
 project(":validator") {
     sonarqube {
         properties {
-            property "sonar.projectName", "Alvearie_hri-flink-pipeline-core-fhir-validator"
             property "sonar.scala.coverage.reportPaths", "./build/reports/scoverage/scoverage.xml,./build/reports/scoverage/cobertura.xml"
         }
     }}
