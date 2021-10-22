@@ -123,6 +123,23 @@ allprojects {
     }    
 }
 
+sonarqube {
+    properties {
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.projectKey", "Alvearie_hri-flink-validation-fhir"
+        property "sonar.organization", "alvearie"
+    }
+}
+
+project(":validation") {
+    sonarqube {
+        properties {
+            property "sonar.projectName", "Alvearie_hri-flink-pipeline-core-fhir-validation"
+            property "sonar.scala.coverage.reportPaths", "./build/reports/scoverage/scoverage.xml,./build/reports/scoverage/cobertura.xml"
+        }
+    }}
+
 dependencies {
     // Scala lib
     implementation "org.scala-lang:scala-library:${scalaVersion}"
