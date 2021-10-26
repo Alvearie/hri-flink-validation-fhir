@@ -101,7 +101,7 @@ jobs:
           ibmcloud plugin install event-streams
           ibmcloud es init -i ${ES_INSTANCE}
           ibmcloud ks cluster config --cluster hri-dev1-cluster-1
-          ./gradlew downloadPerfTestRecords
+          ./gradlew downloadPerfTestRecords -PcloudApiKey=$CLOUD_API_KEY
           ./gradlew generateSyntheaRecords
           ./run-nightlytests.sh
 
