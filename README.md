@@ -75,16 +75,16 @@ GitHub actions is used for CI/CD. It runs unit tests, builds the code, and then 
 
 Each branch uses its own topics, so different builds don't interfere with each other. Integration tests will clean up after themselves cancelling the Flink job, deleting the job jar, and the Event Streams topics.
 
-The Flink logs are available for trouble shooting. They can be viewed in the Flink UI or the Kubernetes logs. The logs for all jobs are combined together, so you may need to search to a specific time frame or look for specific keywords.
+The Flink logs are available for troubleshooting. They can be viewed in the Flink UI or the Kubernetes logs. The logs for all jobs are combined, so you may need to search to a specific time frame or look for specific keywords.
 
 
 ## Releases
-Releases are created by creating Git tags, which trigger a Github actions build that publishes a release version in Github packages, see [Overall strategy](http://SOME_NEW_URL/docs/wiki/Overall-Project-Branching,-Test,-and-Release-Strategy) for more details.
+Releases are created by creating Git tags, which trigger a Github actions build that publishes a release version in Github packages.
 
 ## Code Overview
 
 ### Classes
-The code contains two sub projects: 
+The code contains two subprojects: 
 - A FHIR validator library - is in its own project so that it can be published and used by others who might want to use it in a custom validation job.
 - A Flink FHIR validation job - uses the validator library; currently validates that the records meet the 'bundle' FHIR schema specification. A future goal is to support FHIR profile validation.
 
