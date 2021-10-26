@@ -4,13 +4,6 @@
 
 require_relative '../env'
 
-# Prior to running this test:
-#   - run `./gradlew build publishToMavenLocal` in the project's root directory to build the hri-flink-validation-fhir jar
-#   - run `./gradlew copyNightlyTestDependencies` in the project's root directory to prep the jar for this test's use
-#
-# Anytime the flink-validation-fhir jar is recompiled, the steps above need to be executed for these tests to pick up the
-# new version
-
 describe 'Flink Validation FHIR High Availability Job' do
 
   before(:all) do
