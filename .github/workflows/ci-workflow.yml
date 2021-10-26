@@ -77,6 +77,7 @@ jobs:
           bundler-cache: false
 
       - name: Install Ruby Gems, Run IVT
+        if: github.ref == 'refs/heads/develop'
         run: |
           gem install bundler
           BUNDLE_GEMFILE="./test/Gemfile" bundle install
@@ -92,8 +93,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          gem install bundler
+          BUNDLE_GEMFILE="./test/Gemfile" bundle install
+          gem specific_install -l https://github.com/Alvearie/hri-test-helpers.git main
+          curl -sL https://ibm.biz/idt-installer | bash
+          ibmcloud login --apikey $CLOUD_API_KEY -r us-east || { echo 'IBM Cloud CLI login failed!'; exit 1; }
+          ibmcloud plugin install event-streams
+          ibmcloud es init -i ${ES_INSTANCE}
           ibmcloud ks cluster config --cluster hri-dev1-cluster-1
-          ./gradlew copyNightlyTestDependencies
+          ./gradlew downloadPerfTestRecords
+          ./gradlew generateSyntheaRecords
           ./run-nightlytests.sh
 
       - name: Upload Test Results
