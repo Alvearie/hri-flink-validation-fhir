@@ -93,7 +93,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ibmcloud ks cluster config --cluster hri-dev1-cluster-1
-          ./gradlew copyNightlyTestDependencies
+          ./gradlew generateSyntheaRecords
           ./run-nightlytests.sh
 
       - name: Upload Test Results
