@@ -20,14 +20,12 @@ plugins {
 allprojects {
     apply plugin: 'scala'
     group = 'org.alvearie.hri.flink'
-    version = 'support-2.x-SNAPSHOT' // TODO: Change when creating first tagged version of passthrough in Alvearie.
+    version = '2.1-1.0.2'
 
     apply plugin: "org.sonatype.gradle.plugins.scan"
 
     ext {
-        //Temporarily changed for testing Alvearie CI updates
-        //pipelineCoreVersion = '2.1-1.0.1'
-        pipelineCoreVersion = 'support-2.x-SNAPSHOT'     // TODO: Change when first tagged version of core published
+        pipelineCoreVersion = '2.1-1.0.2'
         javaVersion = '1.8'
         flinkVersion = '1.10.3'
         scalaBinaryVersion = '2.12'
