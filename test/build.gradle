@@ -10,54 +10,8 @@ plugins {
 
 description = """Setup For Integration Test Dependencies"""
 
-configurations {
-    nightlyTests
-}
-
-dependencies {
-    nightlyTests "org.alvearie.hri.flink:hri-flink-validation-fhir:${version}"
-}
-
-import groovy.json.JsonSlurper
-task downloadPerfTestRecords()  {
-    def rootDir = project.file("./").absolutePath
-    outputs.dir(rootDir + "/test_data/synthetic_mass/fhir")
-
-    doLast {
-        if (!project.hasProperty("cloudApiKey")) {
-            println "Required API key parameter is missing, will not download FHIR records."
-            return
-        }
-
-        def apiKey = project.getProperty("cloudApiKey")
-
-        println "Requesting IAM token..."
-        def command = ['curl', '-X', 'POST', 'https://iam.cloud.ibm.com/identity/token', '-d', 'grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=' + apiKey]
-        def resp = command.execute().text
-
-        def json = new JsonSlurper().parseText(resp)
-        def token = json.access_token
-
-        if (token == null) {
-            println "Failed to get IAM access token, will not download FHIR records."
-            return
-        }
-
-        ['mkdir', rootDir + '/test_data/synthetic_mass'].execute()
-        ['mkdir', rootDir + '/test_data/synthetic_mass/fhir'].execute()
-
-        println "Downloading perf-test-records.zip from COS..."
-        ['curl', 'https://s3.us-east.cloud-object-storage.appdomain.cloud/wh-hri-dev1-fhir-validation-perf-test-records/perf-test-records.zip',
-         '-H', 'Authorization: bearer ' + token, '--output', rootDir + '/test_data/synthetic_mass/fhir/perf-test-records.zip' ].execute().text
-
-        println "Unzipping..."
-        ['unzip', rootDir + '/test_data/synthetic_mass/fhir/perf-test-records.zip', '-d', rootDir + '/test_data/synthetic_mass/fhir'].execute().text
-
-        println "Removing perf-test-records.zip"
-        ['rm', rootDir + '/test_data/synthetic_mass/fhir/perf-test-records.zip'].execute()
-    }
-}
-
+//Load testing uses patients generated using Synthea. The Synthea jar is copied from github releases into
+// the dependencies directory.
 task generateSyntheaRecords {
     def rootDir = project.file("./").absolutePath
     outputs.dir(rootDir + "/test_data/synthea/fhir")
@@ -78,17 +32,4 @@ task generateSyntheaRecords {
         ['java', '-jar', rootDir + '/dependencies/synthea-with-dependencies.jar', '-p', '300', '-c',
          rootDir + '/test_data/synthea.properties'].execute()
     }
-}
-
-// The nightlyTests (test/nightly) push a hri-flink-validation-fhir jar to flink. The tests run in a different build stage,
-// so the jar can not be copied from the build output. This task will get the jar from maven and copy it into the
-// "test/dependencies" directory
-//
-// In addition, load testing uses patients generated using Synthea. The Synthea jar is copied from github releases into
-// the dependencies directory
-task copyNightlyTestDependencies(type: Copy) {
-    dependsOn downloadPerfTestRecords, generateSyntheaRecords
-
-    from configurations.nightlyTests
-    into 'dependencies'
 }

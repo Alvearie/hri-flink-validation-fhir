@@ -14,15 +14,16 @@ describe 'Flink FHIR Validation Load Test' do
     BATCH_COMPLETION_DELAY = 30000
     ENV['TEST_NAME'] = 'load' unless ENV['TEST_NAME']
 
+    @branch_name = ENV['BRANCH_NAME']
     @flink_helper = HRITestHelpers::FlinkHelper.new(ENV['FLINK_URL'])
     @event_streams_helper = HRITestHelpers::EventStreamsHelper.new
     @iam_token = HRITestHelpers::IAMHelper.new(ENV['IAM_CLOUD_URL']).get_access_token(ENV['CLOUD_API_KEY'])
     @appid_helper = HRITestHelpers::AppIDHelper.new(ENV['APPID_URL'], ENV['APPID_TENANT'], @iam_token, ENV['JWT_AUDIENCE_ID'])
     @flink_api_oauth_token = @appid_helper.get_access_token('hri_integration_tenant_test_data_integrator', '', ENV['APPID_FLINK_AUDIENCE'])
     @hri_oauth_token = @appid_helper.get_access_token('hri_integration_tenant_test_data_integrator', 'tenant_test hri_data_integrator', ENV['APPID_HRI_AUDIENCE'])
-    @kafka = Kafka.new(ENV['KAFKA_BROKERS'], client_id: "hri-flink-validation-fhir-#{@travis_branch}-#{Time.now.to_i}", connect_timeout: 10, socket_timeout: 10, sasl_plain_username: 'token', sasl_plain_password: ENV['SASL_PLAIN_PASSWORD'], ssl_ca_certs_from_system: true)
+    @kafka = Kafka.new(ENV['KAFKA_BROKERS'], client_id: "hri-flink-validation-fhir-#{@branch_name}-#{Time.now.to_i}", connect_timeout: 10, socket_timeout: 10, sasl_plain_username: 'token', sasl_plain_password: ENV['SASL_PLAIN_PASSWORD'], ssl_ca_certs_from_system: true)
     @mgmt_api_helper = HRITestHelpers::MgmtAPIHelper.new(ENV['HRI_INGRESS_URL'], @iam_token)
-    @validation_jar_id = @flink_helper.upload_jar_from_dir('hri-flink-validation-fhir-nightly-test-jar.jar', File.join(File.dirname(__FILE__), '../dependencies'), @flink_api_oauth_token, /hri-flink-validation-fhir-.+.jar/)
+    @validation_jar_id = @flink_helper.upload_jar_from_dir("hri-flink-validation-fhir-#{@branch_name}.jar", File.join(File.dirname(__FILE__), '../../validation/build/libs'), @flink_api_oauth_token, /hri-flink-validation-fhir-.+.jar/)
 
     @flink_job = FlinkJob.new(@flink_helper, @event_streams_helper, @kafka, @validation_jar_id, TENANT_ID)
     @flink_job.start_job(@flink_api_oauth_token, PARALLELISM, BATCH_COMPLETION_DELAY, true, {input_topic: ENV['INPUT_TOPIC'], output_topic: ENV['OUTPUT_TOPIC'], notification_topic: ENV['NOTIFICATION_TOPIC'], invalid_topic: ENV['INVALID_TOPIC']})

@@ -6,15 +6,16 @@
 
 package org.alvearie.hri.flink.fhir
 
+import java.io.{File, FilenameFilter}
+import java.nio.charset.StandardCharsets
+import java.util
+
 import org.alvearie.hri.flink.core.serialization.HriRecord
 import org.alvearie.hri.flink.fhir.TestJson._
 import org.apache.commons.io.filefilter.SuffixFileFilter
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
 
-import java.io.{File, FilenameFilter}
-import java.nio.charset.StandardCharsets
-import java.util
 import scala.io.Source
 
 class FhirJsonValidationTest extends AnyFunSuite {

@@ -89,34 +89,24 @@
      ```./gradlew clean build shadowJar --refresh-dependencies```
      
 
-   - From within the top directory of this project, run the integration tests with:   
-     ```rspec test/spec --tag ~@broken```
-     
-      If you want to run the high availability, performance or load tests, you must first run the following commands in the `hri-flink-validation-fhir` repo:
-      ```bash
-         ./gradlew build publishToMavenLocal
-         ./gradlew copyNightlyTestDependencies -PcloudApiKey=$CLOUD_API_KEY
-      ```
-
-     The last step before running the tests is to install the `hri-test-helpers` gem locally. Run the following commands:
+   - The last step before running the tests is to install the `hri-test-helpers` gem locally. Run the following commands:
       ```bash
          gem install specific_install
          gem specific_install -l git@github.com/Alvearie/hri-test-helpers.git -b master
       ```
      Then, add the following line to Gemfile, but *do not commit this change to Github*:
      ```gem 'hri-test-helpers```
+
+   - From within the top directory of this project, run the integration tests with:   
+     ```rspec test/spec --tag ~@broken```
      
-      Then run the tests with:
-     
-     ```rspec test/nightly/flink_validation_high_availability_spec.rb --tag ~@broken```
+     To run the High Availability tests, run the following command:
+     ```rspec test/nightly/flink_validation_fhir_high_availability_spec.rb --tag ~@broken```
      
      The load test requires a bucket of auto-generated, large fhir records. The following command generates the records in the `test/test_data/synthea` directory.
-     
      ```java -jar test/dependencies/synthea-with-dependencies.jar -p 100 -c test/test_data/synthea.properties```
      
-     The Synthea records are automatically generated when the `copyNightlyTestDependencies` task is run. Alternatively,
-     you can use the `generateSyntheaRecords` task to generate the records independently.
-     
-     The performance test requires a different bucket of static records stored in a zip file in COS. These records are 
-     also automatically downloaded when the `copyNightlyTestDependencies` task is run. Alternitively, you can use the
-     `downloadPerfTestRecords` task to download the records independently.
+     Alternatively, you can use the `generateSyntheaRecords` gradle task to generate the records independently.
+
+     When the records are generated, run the load test with the following command:
+     ```rspec test/nightly/flink_validation_fhir_load_test_spec.rb --tag ~@broken```

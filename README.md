@@ -1,6 +1,6 @@
-  # HRI Flink Validation FHIR
+# HRI Flink Validation FHIR
 
-The Alvearie Health Record Ingestion service: a common 'Deployment Ready Component' designed to serve as a “front door” for data for cloud-based solutions. See our [documentation](https://alvearie.io/HRI/) for more details.
+The Alvearie Health Record Ingestion service: a common 'Deployment Ready Component' designed to serve as a “front door” for data for cloud-based solutions. See our [documentation](https://alvearie.io/HRI) for more details.
 
 This repo contains the code for the HRI Flink Validation FHIR Job of the HRI, which validates that the incoming (HRI Record's) message payload adheres to the [FHIR specification](https://www.hl7.org/fhir/overview.html).
 
@@ -21,12 +21,12 @@ Note: This software uses Apache Flink (https://flink.apache.org/) for streaming 
 ### Building
 From the base directory, run `./gradlew clean build`. This will download dependencies and run all the unit tests. (Some output has been omitted for the sake of concision)
 
-This depends on the `hri-flink-pipeline-core` [GitHub repo](https://github.com/Alvearie/hri-flink-pipeline-core) and its published packages. 
+This depends on the `hri-flink-pipeline-core` [GitHub repo](https://github.com/Alvearie/hri-flink-pipeline-core) and it's published packages.
 
 ```
 hri-flink-validation-fhir % ./gradlew clean build
 
-> Task :validator:test 
+> Task :validator:test
 Discovery starting.
 Discovery completed in 186 milliseconds.
 Run starting. Expected test count is: 10
@@ -42,7 +42,7 @@ All tests passed.
 [info] Found 1 subproject scoverage data directories [hri-flink-validation-fhir/validator/build/scoverage]
 
 > Task :validator:reportScoverage
-[info] Found 1 subproject scoverage data directories [hri-flink-validation-fhir/validator/build/scoverage]
+[info] Found 1 subproject scoverage data directories [/hri-flink-validation-fhir/validator/build/scoverage]
 Scoverage report:
   hri-flink-validation-fhir/validator/build/reports/scoverage/index.html
 
@@ -75,15 +75,16 @@ GitHub actions is used for CI/CD. It runs unit tests, builds the code, and then 
 
 Each branch uses its own topics, so different builds don't interfere with each other. Integration tests will clean up after themselves cancelling the Flink job, deleting the job jar, and the Event Streams topics.
 
-The Flink logs are available for trouble shooting. They can be viewed in the Flink UI or the Kubernetes logs. The logs for all jobs are combined together, so you may need to search to a specific time frame or look for specific keywords.
+The Flink logs are available for troubleshooting. They can be viewed in the Flink UI or the Kubernetes logs. The logs for all jobs are combined, so you may need to search to a specific time frame or look for specific keywords.
+
 
 ## Releases
-Releases are created by creating Git tags, which trigger a Github actions build that publishes a release version in Github Packages, see [Overall strategy](SOME_NEW_URL/docs/wiki/Overall-Project-Branching,-Test,-and-Release-Strategy) for more details.
+Releases are created by creating Git tags, which trigger a Github actions build that publishes a release version in Github packages.
 
 ## Code Overview
 
 ### Classes
-The code contains two sub projects: 
+The code contains two subprojects: 
 - A FHIR validator library - is in its own project so that it can be published and used by others who might want to use it in a custom validation job.
 - A Flink FHIR validation job - uses the validator library; currently validates that the records meet the 'bundle' FHIR schema specification. A future goal is to support FHIR profile validation.
 
