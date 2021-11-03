@@ -73,7 +73,7 @@ class FlinkJob
     end
 
     # Start the flink job and verify that it is running
-    @job_id = @flink_helper.start_flink_job(@validation_jar_id, ENV['KAFKA_BROKERS'], ENV['SASL_PLAIN_PASSWORD'], @kafka_input_topic, ENV['HRI_SERVICE_URL'], ENV['OIDC_HRI_INTERNAL_CLIENT_ID'], ENV['OIDC_HRI_INTERNAL_CLIENT_SECRET'], "#{ENV['APPID_URL']}/oauth/v4/#{ENV['APPID_TENANT']}", ENV['APPID_HRI_AUDIENCE'], batch_complete_delay, flink_oauth_token)
+    @job_id = @flink_helper.start_flink_job(@validation_jar_id, ENV['KAFKA_BROKERS'], ENV['SASL_PLAIN_PASSWORD'], @kafka_input_topic, ENV['HRI_SERVICE_URL'], ENV['OIDC_HRI_INTERNAL_CLIENT_ID'], ENV['OIDC_HRI_INTERNAL_CLIENT_SECRET'], "#{ENV['APPID_URL']}/oauth/v4/#{ENV['APPID_TENANT']}", ENV['APPID_HRI_AUDIENCE'], batch_complete_delay, flink_oauth_token, parallelism)
     @flink_helper.verify_job_state(@job_id, flink_oauth_token, 'RUNNING')
     @job_started = true
 
