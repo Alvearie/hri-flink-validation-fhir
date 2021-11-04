@@ -37,14 +37,6 @@ describe 'Flink FHIR Validation Load Test' do
 
   it "should process records under load" do
     begin
-      # Submit a batch. This batch will load a set amount of records and will be used for a throughput calculation
-      main_batch = @flink_job.submit_batch(@mgmt_api_helper, @hri_oauth_token)
-      main_batch_submitted = Time.now
-
-      # Submit two more batches. These batches will continuously upload records, simulating high traffic through flink
-      background_batch_1 = @flink_job.submit_batch(@mgmt_api_helper, @hri_oauth_token)
-      background_batch_2 = @background_flink_job.submit_batch(@mgmt_api_helper, @hri_oauth_token)
-
       # Callback for when a notification is received by a job's kafka consumer
       batch_notification_callback = lambda { |batch, notification|
 
@@ -71,6 +63,14 @@ describe 'Flink FHIR Validation Load Test' do
       }
       @flink_job.on_batch_notification &batch_notification_callback
       @background_flink_job.on_batch_notification &batch_notification_callback
+
+      # Submit a batch. This batch will load a set amount of records and will be used for a throughput calculation
+      main_batch = @flink_job.submit_batch(@mgmt_api_helper, @hri_oauth_token)
+      main_batch_submitted = Time.now
+
+      # Submit two more batches. These batches will continuously upload records, simulating high traffic through flink
+      background_batch_1 = @flink_job.submit_batch(@mgmt_api_helper, @hri_oauth_token)
+      background_batch_2 = @background_flink_job.submit_batch(@mgmt_api_helper, @hri_oauth_token)
 
       # Callback for when an invalid record is received by the job's kafka consumer. Invalid records for the
       # flink-background job are ignored.

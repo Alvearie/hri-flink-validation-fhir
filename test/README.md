@@ -64,8 +64,6 @@
       * INVALID_TOPIC
       * HRI_INGRESS_URL
       * HRI_SERVICE_URL
-      * LOGDNA_URL
-      * LOGDNA_INGESTION_KEY - Cloud LogDNA Ingestion Key
       * BRANCH_NAME - your git branch name
    
 
