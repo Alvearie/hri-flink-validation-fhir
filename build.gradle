@@ -25,7 +25,7 @@ allprojects {
     apply plugin: "org.sonatype.gradle.plugins.scan"
 
     ext {
-        pipelineCoreVersion = 'develop-SNAPSHOT'
+        pipelineCoreVersion = 'WHFHRI-722-SNAPSHOT'
         javaVersion = '1.8'
         flinkVersion = '1.14.0'
         scalaBinaryVersion = '2.12'
