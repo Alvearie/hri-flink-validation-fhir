@@ -20,12 +20,12 @@ plugins {
 allprojects {
     apply plugin: 'scala'
     group = 'org.alvearie.hri.flink'
-    version = 'Alpha.Dev'
+    version = '3.2-1.1.0'
 
     apply plugin: "org.sonatype.gradle.plugins.scan"
 
     ext {
-        pipelineCoreVersion = 'develop-SNAPSHOT'
+        pipelineCoreVersion = '3.2-1.1.0'
         javaVersion = '1.8'
         flinkVersion = '1.14.0'
         scalaBinaryVersion = '2.12'
