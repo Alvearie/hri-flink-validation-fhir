@@ -18,7 +18,7 @@ dependencies {
     implementation "org.scala-lang:scala-library:${scalaVersion}"
 
     implementation "org.alvearie.hri.flink:hri-flink-pipeline-core:${pipelineCoreVersion}"
-    implementation "commons-io:commons-io:2.8" // not sure why this isn't getting picked up from hri-flink-pipeline-core
+    implementation "commons-io:commons-io:2.8.0" // not sure why this isn't getting picked up from hri-flink-pipeline-core
     implementation "org.apache.flink:flink-connector-kafka_${scalaBinaryVersion}:${flinkVersion}" // not sure why this isn't getting picked up from hri-flink-pipeline-core
     implementation "com.ibm.fhir:fhir-model:4.7.1" 
 
