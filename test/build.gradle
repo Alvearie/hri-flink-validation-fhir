@@ -17,7 +17,7 @@ task generateSyntheaRecords {
     outputs.dir(rootDir + "/test_data/synthea/fhir")
 
     doLast {
-        def address='https://github.com/synthetichealth/synthea/releases/download/master-branch-latest/synthea-with-dependencies.jar'
+        def address='https://github.com/synthetichealth/synthea/releases/download/v3.0.0/synthea-with-dependencies.jar'
         def target= rootDir + "/dependencies/synthea-with-dependencies.jar"
 
         def mkdirProc = ['mkdir', rootDir + '/dependencies'].execute()
