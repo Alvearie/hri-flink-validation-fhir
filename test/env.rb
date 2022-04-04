@@ -30,4 +30,4 @@ require 'hritesthelpers'
 require_relative './spec/batch'
 require_relative './spec/flink_job'
 require_relative './spec/kafka_record_validator'
-
+require_relative './spec/event_streams_api_helper'

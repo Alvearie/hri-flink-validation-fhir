@@ -10,9 +10,9 @@ class FlinkJob
   @@total_jobs = 0
   @@total_batches = 0
 
-  def initialize(flink_helper, event_streams_helper, kafka_helper, validation_jar_id, tenant)
+  def initialize(flink_helper, event_streams_api_helper, kafka_helper, validation_jar_id, tenant)
     @flink_helper = flink_helper
-    @event_streams_helper = event_streams_helper
+    @event_streams_api_helper = event_streams_api_helper
     @kafka_helper = kafka_helper
     @validation_jar_id = validation_jar_id
     @tenant = tenant
@@ -41,11 +41,11 @@ class FlinkJob
       @kafka_invalid_topic = kafka_topics[:invalid_topic].gsub('.invalid', "-#{GIT_BRANCH}-job#{@job_number}-#{timestamp}.invalid")
 
       # Create kafka topics for the job
-      @event_streams_helper.create_topic(@kafka_input_topic, parallelism)
-      @event_streams_helper.create_topic(@kafka_output_topic, parallelism)
-      @event_streams_helper.create_topic(@kafka_notification_topic, 1)
-      @event_streams_helper.create_topic(@kafka_invalid_topic, parallelism)
-      @event_streams_helper.verify_topic_creation([@kafka_input_topic, @kafka_output_topic, @kafka_notification_topic, @kafka_invalid_topic])
+      @event_streams_api_helper.create_topic(@kafka_input_topic, parallelism)
+      @event_streams_api_helper.create_topic(@kafka_output_topic, parallelism)
+      @event_streams_api_helper.create_topic(@kafka_notification_topic, 1)
+      @event_streams_api_helper.create_topic(@kafka_invalid_topic, parallelism)
+      @event_streams_api_helper.verify_topic_creation([@kafka_input_topic, @kafka_output_topic, @kafka_notification_topic, @kafka_invalid_topic])
 
       # Create a kafka consumer to monitor the notification, invalid, and output topics
       consumer_group = "hri-flink-validation-fhir-#{GIT_BRANCH}-job#{@job_number}-#{timestamp}-consumer"
@@ -55,10 +55,10 @@ class FlinkJob
       @kafka_consumer.subscribe(@kafka_output_topic)
       @kafka_consumer.subscribe(@kafka_input_topic)
       # Ensure that the consumer is set to the latest offset for each topic
-      @event_streams_helper.reset_consumer_group(@event_streams_helper.get_groups, consumer_group, @kafka_notification_topic, 'latest')
-      @event_streams_helper.reset_consumer_group(@event_streams_helper.get_groups, consumer_group, @kafka_invalid_topic, 'latest')
-      @event_streams_helper.reset_consumer_group(@event_streams_helper.get_groups, consumer_group, @kafka_output_topic, 'latest')
-      @event_streams_helper.reset_consumer_group(@event_streams_helper.get_groups, consumer_group, @kafka_input_topic, 'latest')
+      @event_streams_api_helper.reset_consumer_group(@event_streams_api_helper.get_groups, consumer_group, @kafka_notification_topic, 'latest')
+      @event_streams_api_helper.reset_consumer_group(@event_streams_api_helper.get_groups, consumer_group, @kafka_invalid_topic, 'latest')
+      @event_streams_api_helper.reset_consumer_group(@event_streams_api_helper.get_groups, consumer_group, @kafka_output_topic, 'latest')
+      @event_streams_api_helper.reset_consumer_group(@event_streams_api_helper.get_groups, consumer_group, @kafka_input_topic, 'latest')
 
       # Every flink job will have two threads dedicated to monitoring kafka and the flink job (through the flink API).
       # The "Thread.current" settings prevent exceptions from being raised, or printed to the console, until the monitor
@@ -232,10 +232,10 @@ class FlinkJob
     # Delete Kafka resources
     Logger.new(STDOUT).info("Deleting Kafka Topics")
     @kafka_consumer.stop if @kafka_consumer
-    @event_streams_helper.delete_topic(@kafka_input_topic) if @kafka_input_topic
-    @event_streams_helper.delete_topic(@kafka_output_topic) if @kafka_output_topic
-    @event_streams_helper.delete_topic(@kafka_notification_topic) if @kafka_notification_topic
-    @event_streams_helper.delete_topic(@kafka_invalid_topic) if @kafka_invalid_topic
+    @event_streams_api_helper.delete_topic(@kafka_input_topic)
+    @event_streams_api_helper.delete_topic(@kafka_output_topic)
+    @event_streams_api_helper.delete_topic(@kafka_notification_topic)
+    @event_streams_api_helper.delete_topic(@kafka_invalid_topic)
 
     # Delete Job's batches
     Logger.new(STDOUT).info('Deleting Batches')
