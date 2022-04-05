@@ -16,7 +16,7 @@ describe 'Flink FHIR Validation Load Test' do
 
     @branch_name = ENV['BRANCH_NAME']
     @flink_helper = HRITestHelpers::FlinkHelper.new(ENV['FLINK_URL'])
-    @event_streams_helper = HRITestHelpers::EventStreamsHelper.new
+    @event_streams_api_helper = EventStreamsAPIHelper.new(ENV['ES_ADMIN_URL'], ENV['ES_API_KEY'])
     @iam_token = HRITestHelpers::IAMHelper.new(ENV['IAM_CLOUD_URL']).get_access_token(ENV['CLOUD_API_KEY'])
     @appid_helper = HRITestHelpers::AppIDHelper.new(ENV['APPID_URL'], ENV['APPID_TENANT'], @iam_token, ENV['JWT_AUDIENCE_ID'])
     @flink_api_oauth_token = @appid_helper.get_access_token('hri_integration_tenant_test_data_integrator', '', ENV['APPID_FLINK_AUDIENCE'])
@@ -25,10 +25,10 @@ describe 'Flink FHIR Validation Load Test' do
     @mgmt_api_helper = HRITestHelpers::MgmtAPIHelper.new(ENV['HRI_INGRESS_URL'], @iam_token)
     @validation_jar_id = @flink_helper.upload_jar_from_dir("hri-flink-validation-fhir-#{@branch_name}.jar", File.join(File.dirname(__FILE__), '../../validation/build/libs'), @flink_api_oauth_token, /hri-flink-validation-fhir-.+.jar/)
 
-    @flink_job = FlinkJob.new(@flink_helper, @event_streams_helper, @kafka, @validation_jar_id, TENANT_ID)
+    @flink_job = FlinkJob.new(@flink_helper, @event_streams_api_helper, @kafka, @validation_jar_id, TENANT_ID)
     @flink_job.start_job(@flink_api_oauth_token, PARALLELISM, BATCH_COMPLETION_DELAY, true, {input_topic: ENV['INPUT_TOPIC'], output_topic: ENV['OUTPUT_TOPIC'], notification_topic: ENV['NOTIFICATION_TOPIC'], invalid_topic: ENV['INVALID_TOPIC']})
 
-    @background_flink_job = FlinkJob.new(@flink_helper, @event_streams_helper, @kafka, @validation_jar_id, TENANT_ID)
+    @background_flink_job = FlinkJob.new(@flink_helper, @event_streams_api_helper, @kafka, @validation_jar_id, TENANT_ID)
     @background_flink_job.start_job(@flink_api_oauth_token, PARALLELISM, BATCH_COMPLETION_DELAY, true, {input_topic: ENV['INPUT_TOPIC'], output_topic: ENV['OUTPUT_TOPIC'], notification_topic: ENV['NOTIFICATION_TOPIC'], invalid_topic: ENV['INVALID_TOPIC']})
 
     @input_dir = File.join(File.dirname(__FILE__), "../test_data/synthea/fhir")

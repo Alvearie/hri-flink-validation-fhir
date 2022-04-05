@@ -11,7 +11,7 @@ describe 'Flink Validation FHIR High Availability Job' do
     BATCH_COMPLETION_DELAY = 5000
     @branch_name = ENV['BRANCH_NAME']
     @flink_helper = HRITestHelpers::FlinkHelper.new(ENV['FLINK_URL'])
-    @event_streams_helper = HRITestHelpers::EventStreamsHelper.new
+    @event_streams_api_helper = EventStreamsAPIHelper.new(ENV['ES_ADMIN_URL'], ENV['ES_API_KEY'])
     @iam_token = HRITestHelpers::IAMHelper.new(ENV['IAM_CLOUD_URL']).get_access_token(ENV['CLOUD_API_KEY'])
     @appid_helper = HRITestHelpers::AppIDHelper.new(ENV['APPID_URL'], ENV['APPID_TENANT'], @iam_token, ENV['JWT_AUDIENCE_ID'])
     @flink_api_oauth_token = @appid_helper.get_access_token('hri_integration_tenant_test_data_integrator', '', ENV['APPID_FLINK_AUDIENCE'])
@@ -26,11 +26,11 @@ describe 'Flink Validation FHIR High Availability Job' do
     @output_topic = ENV['OUTPUT_TOPIC'].gsub('.out', "-#{@branch_name}-#{timestamp}.out")
     @notification_topic = ENV['NOTIFICATION_TOPIC'].gsub('.notification', "-#{@branch_name}-#{timestamp}.notification")
     @invalid_topic = ENV['INVALID_TOPIC'].gsub('.invalid', "-#{@branch_name}-#{timestamp}.invalid")
-    @event_streams_helper.create_topic(@input_topic, 1)
-    @event_streams_helper.create_topic(@output_topic, 1)
-    @event_streams_helper.create_topic(@notification_topic, 1)
-    @event_streams_helper.create_topic(@invalid_topic, 1)
-    @event_streams_helper.verify_topic_creation([@input_topic, @output_topic, @notification_topic, @invalid_topic])
+    @event_streams_api_helper.create_topic(@input_topic, 1)
+    @event_streams_api_helper.create_topic(@output_topic, 1)
+    @event_streams_api_helper.create_topic(@notification_topic, 1)
+    @event_streams_api_helper.create_topic(@invalid_topic, 1)
+    @event_streams_api_helper.verify_topic_creation([@input_topic, @output_topic, @notification_topic, @invalid_topic])
 
     @output_consumer_group = "flink-validation-fhir-#{@branch_name}-#{timestamp}-output-consumer"
     @notification_consumer_group = "flink-validation-fhir-#{@branch_name}-#{timestamp}-notification-consumer"
@@ -40,7 +40,7 @@ describe 'Flink Validation FHIR High Availability Job' do
     #Upload Jar File
     @test_jar_id = @flink_helper.upload_jar_from_dir("hri-flink-validation-fhir-#{@branch_name}.jar", File.join(File.dirname(__FILE__), '../../validation/build/libs'), @flink_api_oauth_token, /hri-flink-validation-fhir-.+.jar/)
 
-    @flink_job = FlinkJob.new(@flink_helper, @event_streams_helper, @kafka, @test_jar_id, TENANT_ID)
+    @flink_job = FlinkJob.new(@flink_helper, @event_streams_api_helper, @kafka, @test_jar_id, TENANT_ID)
     @flink_job.start_job(@flink_api_oauth_token, 1, BATCH_COMPLETION_DELAY, false, {input_topic: @input_topic})
   end
 
@@ -53,13 +53,13 @@ describe 'Flink Validation FHIR High Availability Job' do
     @kafka_invalid_consumer = @kafka.consumer(group_id: @invalid_consumer_group)
     @kafka_invalid_consumer.subscribe(@invalid_topic)
 
-    consumer_groups = @event_streams_helper.get_groups
-    @event_streams_helper.reset_consumer_group(consumer_groups, @output_consumer_group, @output_topic, 'latest')
-    @event_streams_helper.reset_consumer_group(consumer_groups, @notification_consumer_group, @notification_topic, 'latest')
-    @event_streams_helper.reset_consumer_group(consumer_groups, @invalid_consumer_group, @invalid_topic, 'latest')
-    @event_streams_helper.reset_consumer_group(consumer_groups, "hri-validation-#{@input_topic}-#{@output_topic}", @input_topic, 'latest')
-    @event_streams_helper.reset_consumer_group(consumer_groups, "hri-validation-#{@input_topic}-#{@output_topic}", @notification_topic, 'latest')
-    @event_streams_helper.reset_consumer_group(consumer_groups, "hri-validation-#{@input_topic}-#{@output_topic}", @invalid_topic, 'latest')
+    consumer_groups = @event_streams_api_helper.get_groups
+    @event_streams_api_helper.reset_consumer_group(consumer_groups, @output_consumer_group, @output_topic, 'latest')
+    @event_streams_api_helper.reset_consumer_group(consumer_groups, @notification_consumer_group, @notification_topic, 'latest')
+    @event_streams_api_helper.reset_consumer_group(consumer_groups, @invalid_consumer_group, @invalid_topic, 'latest')
+    @event_streams_api_helper.reset_consumer_group(consumer_groups, "hri-validation-#{@input_topic}-#{@output_topic}", @input_topic, 'latest')
+    @event_streams_api_helper.reset_consumer_group(consumer_groups, "hri-validation-#{@input_topic}-#{@output_topic}", @notification_topic, 'latest')
+    @event_streams_api_helper.reset_consumer_group(consumer_groups, "hri-validation-#{@input_topic}-#{@output_topic}", @invalid_topic, 'latest')
   end
 
   after(:each) do
@@ -87,10 +87,10 @@ describe 'Flink Validation FHIR High Availability Job' do
       response.nil? ? (raise 'Elastic batch delete did not return a response') : (raise 'Failed to delete Elastic batches' unless response.code == 200)
       Logger.new(STDOUT).info("Delete test batches by query response #{response.body}")
     ensure
-      @event_streams_helper.delete_topic(@input_topic)
-      @event_streams_helper.delete_topic(@output_topic)
-      @event_streams_helper.delete_topic(@notification_topic)
-      @event_streams_helper.delete_topic(@invalid_topic)
+      @event_streams_api_helper.delete_topic(@input_topic)
+      @event_streams_api_helper.delete_topic(@output_topic)
+      @event_streams_api_helper.delete_topic(@notification_topic)
+      @event_streams_api_helper.delete_topic(@invalid_topic)
     end
   end
 
@@ -152,7 +152,7 @@ describe 'Flink Validation FHIR High Availability Job' do
     Logger.new(STDOUT).info("Test messages sent to the #{@input_topic} topic")
 
     jar_found = false
-    Timeout.timeout(120, nil, 'Flink did not return a list of jars after 120 seconds') do
+    Timeout.timeout(180, nil, 'Flink did not return a list of jars after 180 seconds') do
       while true
         @response = @flink_helper.get_jars({'Authorization' => "Bearer #{@flink_api_oauth_token}"})
         break if @response.code == 200
